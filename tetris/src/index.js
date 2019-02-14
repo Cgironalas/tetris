@@ -4,106 +4,228 @@ import './index.css';
 
 function Block(props) {
   return (
-    <label className={
-      "block color" + (props.color)
-    }>
-      {props.color}
-    </label>
+    <button className={`block color${props.color}`}>
+    </button>
   );
 }
 
 class Row extends React.Component {
-  renderBlock(i) {
+  render_block(i) {
     return (
-      <div>
-        <label>{this.props.blocks[i]}</label>
-        <Block
-          color={this.props.blocks[i]}
-        />
-      </div>
+      <Block
+        color={this.props.blocks[i]}
+      />
     );
   }
 
   render() {
     return (
       <div className="board-row">
-        {this.renderBlock(0)}
-        {this.renderBlock(1)}
-        {this.renderBlock(2)}
-        {this.renderBlock(3)}
-        {this.renderBlock(4)}
-        {this.renderBlock(5)}
-        {this.renderBlock(6)}
-        {this.renderBlock(7)}
-        {this.renderBlock(0)}
-        {this.renderBlock(0)}
+        {this.render_block(0)}
+        {this.render_block(1)}
+        {this.render_block(2)}
+        {this.render_block(3)}
+        {this.render_block(4)}
+        {this.render_block(5)}
+        {this.render_block(6)}
+        {this.render_block(7)}
+        {this.render_block(8)}
+        {this.render_block(9)}
       </div>
     );
   }
 }
 
 class Board extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      rows: Array(20).fill(
-        {
-          blocks: Array(10).fill(0),
-        }
-      ),
-    };
-  }
-
-  renderRow(i) {
+  render_row(i) {
     return (
       <Row
         height={i}
-        blocks={this.state.rows[i]}
+        blocks={this.props.rows[i]}
       />
     );
   }
 
   render() {
-    const theRows = this.state.rows;
-
     return (
       <div className="board">
-        {this.renderRow(19)}
-        {this.renderRow(18)}
-        {this.renderRow(17)}
-        {this.renderRow(16)}
-        {this.renderRow(15)}
-        {this.renderRow(14)}
-        {this.renderRow(13)}
-        {this.renderRow(12)}
-        {this.renderRow(11)}
-        {this.renderRow(10)}
-        {this.renderRow(9)}
-        {this.renderRow(8)}
-        {this.renderRow(7)}
-        {this.renderRow(6)}
-        {this.renderRow(5)}
-        {this.renderRow(4)}
-        {this.renderRow(3)}
-        {this.renderRow(2)}
-        {this.renderRow(1)}
-        {this.renderRow(0)}
+        {this.render_row(19)}
+        {this.render_row(18)}
+        {this.render_row(17)}
+        {this.render_row(16)}
+        {this.render_row(15)}
+        {this.render_row(14)}
+        {this.render_row(13)}
+        {this.render_row(12)}
+        {this.render_row(11)}
+        {this.render_row(10)}
+        {this.render_row(9)}
+        {this.render_row(8)}
+        {this.render_row(7)}
+        {this.render_row(6)}
+        {this.render_row(5)}
+        {this.render_row(4)}
+        {this.render_row(3)}
+        {this.render_row(2)}
+        {this.render_row(1)}
+        {this.render_row(0)}
       </div>
     );
   }
 }
 
 class Game extends React.Component {
-  render() {
+  constructor(props) {
+    super(props);
+    this.state = {
+      board: Array(20).fill(
+        Array(10).fill(0)
+      ),
+      moving_piece: {
+        // Coordinates are given in x, y
+        coordinates: [[5, 10]],
+        color: 4,
+      }
+    }
+  }
+
+  render_row() {
     return (
-      <div className="game">
+      <Board
+        rows={this.state.board}
+      />
+    );
+  }
+
+
+
+  move_piece(direction) {
+    let i;
+    let blocks = this.state.board;
+    let piece = this.state.moving_piece;
+
+    for (i = 0; i < piece.coordinates.length; i++) {
+      let x = piece.coordinates[i][0];
+      let y = piece.coordinates[i][1];
+      console.log({ x: x, y: y})
+
+      switch(direction) {
+        case 'left':
+          if (x > 0) {
+            blocks[y][x] = 0;
+            blocks[y][x - 1] = piece.color;
+            piece.coordinates[i] = [x - 1, y];
+          }
+          else {
+            return;
+          }
+          break;
+
+        case 'right':
+          if (x < 9) {
+            blocks[y][x] = 0;
+            blocks[y][x + 1] = piece.color;
+            piece.coordinates[i] = [x + 1, y];
+          }
+          else {
+            return;
+          }
+          break;
+
+        case 'drop':
+          blocks[y][x] = 0;
+          blocks[0][x] = piece.color;
+          piece.coordinates[i] = [x, 0];
+          break;
+
+        default:
+          if (y > 0) {
+            blocks[y][x] = 0;
+            blocks[y - 1][x] = piece.color;
+            piece.coordinates[i] = [x, y - 1];
+          }
+          else {
+            return;
+          }
+          break;
+
+      }
+    }
+    this.setState({
+      board: blocks,
+      moving_piece: piece,
+    });
+    console.log(this.state.moving_piece);
+  }
+
+  handleKeyPress = (event) => {
+    //console.log(event.key);
+
+    // DROP
+    if (event.key === 'Enter') {
+      //console.log('DROP');
+      this.move_piece('drop');
+      return;
+    }
+
+    // Rotations
+    if (event.key === 'r' || event.key === ' ') {
+      console.log('ROTATE RIGHT');
+      return;
+    }
+    if (event.key === 'R') {
+      console.log('ROTATE LEFT');
+      return;
+    }
+
+    var lowerKey = event.key.toLowerCase()
+
+    // Pause
+    if (lowerKey === 'p') {
+      console.log('PAUSE');
+      return;
+    }
+
+    // Movement
+    if (lowerKey === 'a') {
+      //console.log('MOVE LEFT');
+      this.move_piece('left');
+      return;
+    }
+    if (lowerKey === 'd' || lowerKey === 'e') {
+      //console.log('MOVE RIGHT');
+      this.move_piece('right');
+      return;
+    }
+    if (lowerKey === 's' || lowerKey === 'o') {
+      //console.log('MOVE BOTTOM');
+      this.move_piece('bottom');
+      return;
+    }
+
+    // Hold piece
+    if (lowerKey === 'h' || lowerKey === 'j') {
+      console.log('HOLD');
+      return;
+    }
+  }
+
+  render() {
+    const score = 0;
+    const nextPiece = 0;
+    const leaderboard = "";
+    return (
+      <div className="game" onKeyPress={this.handleKeyPress}>
         <div className="game-board">
-          <Board />
+          <Board rows={this.state.board} />
         </div>
         <div className="game-info">
-          <div>{ 1 }</div>
-          <ol>{ 2 }</ol>
-          <ol>{ 3 }</ol>
+          <div>Score</div>
+          <div>{score}</div>
+          <div>Next Piece</div>
+          <div>{nextPiece}</div>
+          <div>Leaderboard</div>
+          <div>{leaderboard}</div>
         </div>
       </div>
     );
