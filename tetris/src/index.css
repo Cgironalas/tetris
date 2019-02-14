@@ -1,0 +1,97 @@
+body {
+  font: 14px "Century Gothic", Futura, sans-serif;
+  margin: 20px;
+}
+
+ol, ul {
+  padding-left: 30px;
+}
+
+.board-row:after {
+  clear: both;
+  content: "";
+  display: table;
+}
+
+.status {
+  margin-bottom: 10px;
+}
+
+.block {
+  float: left;
+  font-size: 15px;
+  font-weight: bold;
+  line-height: 20px;
+  height: 20px;
+  margin-right: -1px;
+  margin-top: -1px;
+  padding: 0;
+  text-align: center;
+  width: 20px;
+}
+
+/* empty block */
+.color0 {
+  background: #ffffff;
+  border: 1px solid #999;
+}
+
+/* O-Tetrimino */
+.color1 {
+  background: #ffff00;
+  border: 1px solid #000;
+}
+
+/* I-Tetrimino */
+.color2 {
+  background: #0000ff;
+  border: 1px solid #000;
+}
+
+/* T-Tetrimino */
+.color3 {
+  background: #800080;
+  border: 1px solid #000;
+}
+
+/* L-Tetrimino */
+.color4 {
+  background: #ffa500;
+  border: 1px solid #000;
+}
+
+/* J-Tetrimino */
+.color5 {
+  background: #000080;
+  border: 1px solid #000;
+}
+
+/* J-Tetrimino */
+.color6 {
+  background: #00ff00;
+  border: 1px solid #000;
+}
+
+/* Z-Tetrimino */
+.color7 {
+  background: #ff0000;
+  border: 1px solid #000;
+}
+
+.square:focus {
+  outline: none;
+}
+
+.kbd-navigation .square:focus {
+  background: #ddd;
+}
+
+.game {
+  display: flex;
+  flex-direction: row;
+}
+
+.game-info {
+  margin-left: 20px;
+}
+
