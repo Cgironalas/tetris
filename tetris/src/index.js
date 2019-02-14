@@ -5,6 +5,7 @@ import './index.css';
 function Block(props) {
   return (
     <button className={`block color${props.color}`}>
+      {props.x}-{props.y}
     </button>
   );
 }
@@ -13,6 +14,8 @@ class Row extends React.Component {
   render_block(i) {
     return (
       <Block
+        y={this.props.height}
+        x={i}
         color={this.props.blocks[i]}
       />
     );
@@ -82,8 +85,7 @@ class Game extends React.Component {
         Array(10).fill(0)
       ),
       moving_piece: {
-        // Coordinates are given in x, y
-        coordinates: [[5, 10]],
+        coordinates: [[5, 10],[6,10],[7,10],[8,10]],
         color: 4,
       }
     }
@@ -97,24 +99,42 @@ class Game extends React.Component {
     );
   }
 
-
+  consoleBoard() {
+    let i;
+    let output = "";
+    for (i = 0; i < this.state.board.length; i++) {
+      let row = this.state.board[i].join(' - ');
+      output += row + '\n';
+    }
+    console.log(output);
+  }
 
   move_piece(direction) {
     let i;
-    let blocks = this.state.board;
-    let piece = this.state.moving_piece;
+    //let blocks = this.state.board.slice();
+    let coords = this.state.moving_piece.coordinates;
+    let color = this.state.moving_piece.color;
+    let toWhite = {};
+    let toColor = {};
+    let newCoords = [];
+    let x, y;
 
-    for (i = 0; i < piece.coordinates.length; i++) {
-      let x = piece.coordinates[i][0];
-      let y = piece.coordinates[i][1];
-      console.log({ x: x, y: y})
+    for (i = 0; i < coords.length; i++) {
+      x = coords[i][0];
+      y = coords[i][1];
+      console.log({ x: x, y: y });
 
       switch(direction) {
         case 'left':
           if (x > 0) {
-            blocks[y][x] = 0;
-            blocks[y][x - 1] = piece.color;
-            piece.coordinates[i] = [x - 1, y];
+            console.log('move left');
+            toWhite[[x, y]] = i;
+            x--;
+            toColor[[x, y]] = i;
+            newCoords.push([x,y]);
+            //blocks[y][x] = 0;
+            //blocks[y][x - 1] = piece.color;
+            //piece.coordinates[i] = [x - 1, y];
           }
           else {
             return;
@@ -123,9 +143,14 @@ class Game extends React.Component {
 
         case 'right':
           if (x < 9) {
-            blocks[y][x] = 0;
-            blocks[y][x + 1] = piece.color;
-            piece.coordinates[i] = [x + 1, y];
+            console.log('move right');
+            toWhite[[x, y]] = i;
+            x++;
+            toColor[[x, y]] = i;
+            newCoords.push([x,y]);
+            //blocks[y][x] = 0;
+            //blocks[y][x + 1] = piece.color;
+            //piece.coordinates[i] = [x + 1, y];
           }
           else {
             return;
@@ -133,29 +158,64 @@ class Game extends React.Component {
           break;
 
         case 'drop':
-          blocks[y][x] = 0;
-          blocks[0][x] = piece.color;
-          piece.coordinates[i] = [x, 0];
+          console.log('drop');
+          toWhite[[x, y]] = i;
+          toColor[[x, 0]] = i;
+          newCoords.push([x,y]);
+          //blocks[y][x] = 0;
+          //blocks[0][x] = piece.color;
+          //piece.coordinates[i] = [x, 0];
           break;
 
         default:
           if (y > 0) {
-            blocks[y][x] = 0;
-            blocks[y - 1][x] = piece.color;
-            piece.coordinates[i] = [x, y - 1];
+            console.log('move down');
+            toWhite[[x, y]] = i;
+            y--;
+            toColor[[x, y]] = i;
+            newCoords.push([x,y]);
+            //blocks[y][x] = 0;
+            //blocks[y - 1][x] = piece.color;
+            //piece.coordinates[i] = [x, y - 1];
           }
           else {
             return;
           }
           break;
-
       }
     }
+    console.log('white: '+toWhite);
+    console.log('color: '+toColor);
+    let newBoard = [];
+    let newRow = [];
+    let temp;
+    for(y = 0; y < 20; y++) {
+      newRow = [];
+      for(x = 0; x < 10; x++) {
+        temp = [x, y];
+        if (toColor.hasOwnProperty(temp)) {
+          newRow.push(color);
+        } else {
+          if (toWhite.hasOwnProperty(temp)) {
+            newRow.push(0);
+          }
+          else {
+            newRow.push(this.state.board[y][x]);
+          }
+        }
+      }
+      newBoard.push(newRow);
+    }
+
     this.setState({
-      board: blocks,
-      moving_piece: piece,
+      board: newBoard.slice(),
+      moving_piece: {
+        coordinates: newCoords,
+        color: color
+      },
     });
     console.log(this.state.moving_piece);
+    this.consoleBoard();
   }
 
   handleKeyPress = (event) => {

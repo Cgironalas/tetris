@@ -19,15 +19,15 @@ ol, ul {
 
 .block {
   float: left;
-  font-size: 15px;
+  font-size: 10px;
   font-weight: bold;
-  line-height: 20px;
-  height: 20px;
+  line-height: 30px;
+  height: 30px;
   margin-right: -1px;
   margin-top: -1px;
   padding: 0;
   text-align: center;
-  width: 20px;
+  width: 30px;
 }
 
 /* empty block */
