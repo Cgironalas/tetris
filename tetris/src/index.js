@@ -210,7 +210,8 @@ class Game extends React.Component {
     let toColor = this.get_object_from_piece(newPiece);
     let toWhite = this.get_object_from_piece(this.state.moving_piece);
 
-    this.update_board(toWhite, toColor, newPiece.color, newPiece.coordinates);
+    this.update_board({}, {}, newPiece.color, newPiece.coordinates);
+    //this.update_board(toWhite, toColor, newPiece.color, newPiece.coordinates);
     //this.move_piece('down');
   }
 
@@ -232,6 +233,7 @@ class Game extends React.Component {
     let toColor = {};
     let newCoords = [];
     let x, y;
+    let generate_new = false;
 
     for (i = 0; i < coords.length; i++) {
       x = coords[i][0];
@@ -280,12 +282,21 @@ class Game extends React.Component {
             newCoords.push([x,y]);
           }
           else {
-            return;
+            generate_new = true;
+            break;
           }
           break;
       }
+      if (generate_new) {
+        break;
+      }
     }
-    this.update_board(toWhite, toColor, color, newCoords);
+    if (generate_new) {
+      this.generate_random_piece();
+    }
+    else {
+      this.update_board(toWhite, toColor, color, newCoords);
+    }
   }
 
   handleKeyPress = (event) => {
