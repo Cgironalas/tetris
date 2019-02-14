@@ -81,12 +81,13 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      board: Array(20).fill(
+      board: Array(21).fill(
         Array(10).fill(0)
       ),
       moving_piece: {
+        type: 'i',
         coordinates: [[5, 10],[6,10],[7,10],[8,10]],
-        color: 4,
+        color: 2,
       }
     }
   }
@@ -99,93 +100,8 @@ class Game extends React.Component {
     );
   }
 
-  consoleBoard() {
-    let i;
-    let output = "";
-    for (i = 0; i < this.state.board.length; i++) {
-      let row = this.state.board[i].join(' - ');
-      output += row + '\n';
-    }
-    console.log(output);
-  }
-
-  move_piece(direction) {
-    let i;
-    //let blocks = this.state.board.slice();
-    let coords = this.state.moving_piece.coordinates;
-    let color = this.state.moving_piece.color;
-    let toWhite = {};
-    let toColor = {};
-    let newCoords = [];
+  update_board(toWhite, toColor, color, coords) {
     let x, y;
-
-    for (i = 0; i < coords.length; i++) {
-      x = coords[i][0];
-      y = coords[i][1];
-      console.log({ x: x, y: y });
-
-      switch(direction) {
-        case 'left':
-          if (x > 0) {
-            console.log('move left');
-            toWhite[[x, y]] = i;
-            x--;
-            toColor[[x, y]] = i;
-            newCoords.push([x,y]);
-            //blocks[y][x] = 0;
-            //blocks[y][x - 1] = piece.color;
-            //piece.coordinates[i] = [x - 1, y];
-          }
-          else {
-            return;
-          }
-          break;
-
-        case 'right':
-          if (x < 9) {
-            console.log('move right');
-            toWhite[[x, y]] = i;
-            x++;
-            toColor[[x, y]] = i;
-            newCoords.push([x,y]);
-            //blocks[y][x] = 0;
-            //blocks[y][x + 1] = piece.color;
-            //piece.coordinates[i] = [x + 1, y];
-          }
-          else {
-            return;
-          }
-          break;
-
-        case 'drop':
-          console.log('drop');
-          toWhite[[x, y]] = i;
-          toColor[[x, 0]] = i;
-          newCoords.push([x,y]);
-          //blocks[y][x] = 0;
-          //blocks[0][x] = piece.color;
-          //piece.coordinates[i] = [x, 0];
-          break;
-
-        default:
-          if (y > 0) {
-            console.log('move down');
-            toWhite[[x, y]] = i;
-            y--;
-            toColor[[x, y]] = i;
-            newCoords.push([x,y]);
-            //blocks[y][x] = 0;
-            //blocks[y - 1][x] = piece.color;
-            //piece.coordinates[i] = [x, y - 1];
-          }
-          else {
-            return;
-          }
-          break;
-      }
-    }
-    console.log('white: '+toWhite);
-    console.log('color: '+toColor);
     let newBoard = [];
     let newRow = [];
     let temp;
@@ -210,12 +126,166 @@ class Game extends React.Component {
     this.setState({
       board: newBoard.slice(),
       moving_piece: {
-        coordinates: newCoords,
+        coordinates: coords,
         color: color
       },
     });
-    console.log(this.state.moving_piece);
-    this.consoleBoard();
+  }
+
+  create_piece(type) {
+    switch(type) {
+      case 'o':
+        return {
+          color: 1,
+          type: 'o',
+          coordinates: [[4,21],[5,21],[4,20],[5,20]],
+        }
+
+      case 'i':
+        return {
+          color: 2,
+          type: 'i',
+          coordinates: [[3,20],[4,20],[5,20],[6,20]],
+        }
+      case 't':
+        return {
+          color: 3,
+          type: 't',
+          coordinates: [[4,21],[3,20],[4,20],[5,20]],
+        }
+
+      case 'l':
+        return {
+          color: 4,
+          type: 'l',
+          coordinates: [[5,21],[3,20],[4,20],[5,20]],
+        }
+
+      case 'j':
+        return {
+          color: 5,
+          type: 'j',
+          coordinates: [[3,21],[3,20],[4,20],[5,20]],
+        }
+
+      case 's':
+        return {
+          color: 6,
+          type: 's',
+          coordinates: [[4,21],[5,21],[3,20],[4,20]],
+        }
+
+      case 'z':
+        return {
+          color: 7,
+          type: 'z',
+          coordinates: [[3,21],[4,21],[4,20],[5,20]],
+        }
+
+      default:
+        break;
+    }
+  }
+
+  get_object_from_piece(piece) {
+    let obj = {};
+    let i;
+    for (i = 0; i < piece.coordinates.length; i++) {
+      obj[piece.coordinates[i]] = i;
+    }
+    return obj;
+  }
+
+  generate_random_piece() {
+    let piece_types = ['o','i','t','l','j','s','z'];
+    let current_type_index = piece_types.indexOf(this.state.moving_piece.type);
+    if (current_type_index > -1) {
+      piece_types.splice(current_type_index, 1);
+    }
+
+    let type = piece_types[Math.floor(Math.random()*piece_types.length)];
+    let newPiece = this.create_piece(type);
+    console.log(newPiece);
+
+    let toColor = this.get_object_from_piece(newPiece);
+    let toWhite = this.get_object_from_piece(this.state.moving_piece);
+
+    this.update_board(toWhite, toColor, newPiece.color, newPiece.coordinates);
+    //this.move_piece('down');
+  }
+
+  consoleBoard() {
+    let i;
+    let output = "";
+    for (i = 0; i < this.state.board.length; i++) {
+      let row = this.state.board[i].join(' - ');
+      output += row + '\n';
+    }
+    console.log(output);
+  }
+
+  move_piece(direction) {
+    let i;
+    let coords = this.state.moving_piece.coordinates;
+    let color = this.state.moving_piece.color;
+    let toWhite = {};
+    let toColor = {};
+    let newCoords = [];
+    let x, y;
+
+    for (i = 0; i < coords.length; i++) {
+      x = coords[i][0];
+      y = coords[i][1];
+
+      switch(direction) {
+        case 'left':
+          if (x > 0) {
+            //console.log('move left');
+            toWhite[[x, y]] = i;
+            x--;
+            toColor[[x, y]] = i;
+            newCoords.push([x,y]);
+          }
+          else {
+            return;
+          }
+          break;
+
+        case 'right':
+          if (x < 9) {
+            //console.log('move right');
+            toWhite[[x, y]] = i;
+            x++;
+            toColor[[x, y]] = i;
+            newCoords.push([x,y]);
+          }
+          else {
+            return;
+          }
+          break;
+
+        case 'drop':
+          //console.log('drop');
+          toWhite[[x, y]] = i;
+          toColor[[x, 0]] = i;
+          newCoords.push([x,y]);
+          break;
+
+        default:
+          if (y > 0) {
+            //console.log('move down');
+            toWhite[[x, y]] = i;
+            y--;
+            toColor[[x, y]] = i;
+            newCoords.push([x,y]);
+          }
+          else {
+            return;
+          }
+          break;
+      }
+    }
+    this.update_board(toWhite, toColor, color, newCoords);
   }
 
   handleKeyPress = (event) => {
@@ -231,6 +301,7 @@ class Game extends React.Component {
     // Rotations
     if (event.key === 'r' || event.key === ' ') {
       console.log('ROTATE RIGHT');
+      this.generate_random_piece();
       return;
     }
     if (event.key === 'R') {
