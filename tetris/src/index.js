@@ -105,7 +105,7 @@ class Game extends React.Component {
     let newBoard = [];
     let newRow = [];
     let temp;
-    for(y = 0; y < 20; y++) {
+    for(y = 0; y < 21; y++) {
       newRow = [];
       for(x = 0; x < 10; x++) {
         temp = [x, y];
@@ -229,6 +229,7 @@ class Game extends React.Component {
     let i;
     let coords = this.state.moving_piece.coordinates;
     let color = this.state.moving_piece.color;
+    let coordsObj = this.get_object_from_piece(this.state.moving_piece);
     let toWhite = {};
     let toColor = {};
     let newCoords = [];
@@ -280,6 +281,12 @@ class Game extends React.Component {
             y--;
             toColor[[x, y]] = i;
             newCoords.push([x,y]);
+            //console.log({ x: x, y: y });
+            //this.consoleBoard();
+            if (this.state.board[y][x] !== 0 && !coordsObj.hasOwnProperty([x, y])) {
+              generate_new = true;
+              break;
+            }
           }
           else {
             generate_new = true;
@@ -297,6 +304,7 @@ class Game extends React.Component {
     else {
       this.update_board(toWhite, toColor, color, newCoords);
     }
+    this.consoleBoard();
   }
 
   handleKeyPress = (event) => {
