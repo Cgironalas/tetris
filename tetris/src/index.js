@@ -87,6 +87,8 @@ class Game extends React.Component {
     this.state = {
       score: 0,
       next_piece: 'i',
+      hold_piece: ' ',
+      hold_blocked: false,
       board: Array(21).fill(
         Array(10).fill(0)
       ),
@@ -137,12 +139,16 @@ class Game extends React.Component {
   update_game(
     score = this.state.score,
     next_piece = this.state.next_piece,
+    hold_piece = this.state.hold_piece,
+    hold_blocked = this.state.hold_blocked,
     board = this.state.board,
     moving_piece = this.state.moving_piece
   ) {
     this.setState({
       score: score,
       next_piece: next_piece,
+      hold_piece: hold_piece,
+      hold_blocked: hold_blocked,
       board: board.slice(),
       moving_piece: {
         color: moving_piece.color,
@@ -182,7 +188,7 @@ class Game extends React.Component {
 
       this.console_board(new_board);
 
-      this.update_game(new_score, undefined, new_board);
+      this.update_game(new_score, undefined, undefined, undefined, new_board, undefined);
     }
   }
 
@@ -214,7 +220,7 @@ class Game extends React.Component {
       new_board.push(temp_row);
     }
 
-    this.update_game(undefined, undefined, new_board, moving_piece);
+    this.update_game(undefined, undefined, undefined, undefined, new_board, moving_piece);
   }
 
   // default settings to create any new piece
@@ -281,21 +287,44 @@ class Game extends React.Component {
     return obj;
   }
 
-  generate_random_piece() {
-    let piece_types = ['o','i','t','l','j','s','z'];
-    let current_type_index = piece_types.indexOf(this.state.moving_piece.type);
-    if (current_type_index > -1) {
-      piece_types.splice(current_type_index, 1);
-    }
+  generate_new_piece(type = '') {
+    let new_piece, next_piece;
+    if (type === '') {
+      new_piece = this.create_piece(this.state.next_piece);
+      let piece_types = ['o','i','t','l','j','s','z'];
+      let current_type_index = piece_types.indexOf(this.state.moving_piece.type);
+      if (current_type_index > -1) {
+        piece_types.splice(current_type_index, 1);
+      }
 
-    let type = piece_types[Math.floor(Math.random()*piece_types.length)];
-    let new_piece = this.create_piece(type);
+      next_piece = piece_types[Math.floor(Math.random()*piece_types.length)];
+    }
+    else {
+      new_piece = this.create_piece(type);
+      next_piece = this.state.next_piece;
+    }
     console.log(new_piece);
 
-    this.update_game(undefined, undefined, undefined, new_piece);
+    this.update_game(undefined, next_piece, undefined, undefined, undefined, new_piece);
     this.check_finished_rows();
     this.console_board();
 
+  }
+
+  hold_piece() {
+    if (!this.state.hold_blocked) {
+      let current_hold = this.state.hold_piece;
+      this.update_game(undefined, undefined, this.state.moving_piece.type,
+                       true, undefined, undefined);
+
+      if (current_hold === ' ') {
+        this.generate_new_piece();
+      }
+      else {
+        this.generate_new_piece(current_hold);
+        //this.swap_hold_with_moving(current_hold);
+      }
+    }
   }
 
   move_piece(direction) {
@@ -367,7 +396,7 @@ class Game extends React.Component {
       }
     }
     if (generate_new) {
-      this.generate_random_piece();
+      this.generate_new_piece();
     }
     else {
       this.update_board({color: color, type: type, coordinates: new_coords}, to_white, to_color);
@@ -375,8 +404,8 @@ class Game extends React.Component {
   }
 
   handleKeyPress = (event) => {
-    //console.log("key pressed: ");
-    //console.log({charCode: event.charCode, key: event.key, keyCode: event.keyCode});
+    console.log("key pressed: ");
+    console.log({charCode: event.charCode, key: event.key, keyCode: event.keyCode});
 
     // DROP
     if (event.keyCode === 13) {
@@ -388,7 +417,6 @@ class Game extends React.Component {
     // Rotations
     if (event.keyCode === 82 || event.keyCode === 32) {
       //console.log('ROTATE RIGHT');
-      this.generate_random_piece();
       return;
     }
     if (event.keyCode === 88) {
@@ -420,8 +448,9 @@ class Game extends React.Component {
     }
 
     // Hold piece
-    if (event.keyCode === 72 || event.keycode === 74) {
+    if (event.keyCode === 72 || event.keyCode === 74 || event.keyCode === 16) {
       //console.log('HOLD');
+      this.hold_piece();
       return;
     }
   }
@@ -437,7 +466,9 @@ class Game extends React.Component {
           <div>Score</div>
           <div>{this.state.score}</div>
           <div>Next Piece</div>
-          <div>{this.state.nextPiece}</div>
+          <div>{this.state.next_piece}</div>
+          <div>Hold Piece</div>
+          <div>{this.state.hold_piece}</div>
           <div>Leaderboard</div>
           <div>{leaderboard}</div>
         </div>
