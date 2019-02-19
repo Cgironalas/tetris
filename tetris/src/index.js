@@ -6,7 +6,6 @@ import './index.css';
 function Block(props) {
   return (
     <button className={`block color${props.color}`}>
-      {props.x}-{props.y}
     </button>
   );
 }
@@ -85,6 +84,7 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      finished_game: false,
       score: 0,
       next_piece: 'i',
       hold_piece: ' ',
@@ -145,6 +145,7 @@ class Game extends React.Component {
     moving_piece = this.state.moving_piece
   ) {
     this.setState({
+      finished_game: false,
       score: score,
       next_piece: next_piece,
       hold_piece: hold_piece,
@@ -363,15 +364,16 @@ class Game extends React.Component {
     let to_color = {};
     let new_coords = [];
     let generate_new = false;
+    let finished_game = false;
 
-    let color = this.state.moving_piece.color;
     let type = this.state.moving_piece.type;
+    let color = this.state.moving_piece.color;
     let coords = this.state.moving_piece.coordinates;
     let coords_obj = this.get_object_from_piece(this.state.moving_piece);
 
-    for (let pair of coords) {
-      x = pair[0];
-      y = pair[1];
+    for ([x, y] of coords) {
+      //x = pair[0];
+      //y = pair[1];
 
       switch(direction) {
         case 'left':
@@ -419,8 +421,15 @@ class Game extends React.Component {
             to_color[[x, y]] = 0;
             new_coords.push([x,y]);
             if (this.state.board[y][x] !== 0 && !coords_obj.hasOwnProperty([x, y])) {
-              generate_new = true;
-              break;
+              console.log('y is: ' + y);
+              if (y >= 19) {
+                finished_game = true;
+                break;
+              }
+              else {
+                generate_new = true;
+                break;
+              }
             }
           }
           else {
@@ -436,64 +445,76 @@ class Game extends React.Component {
     if (generate_new) {
       this.generate_new_piece();
       this.check_finished_rows();
-      this.check_finish_game();
       this.console_board();
-
     }
     else {
       this.update_board({color: color, type: type, coordinates: new_coords}, to_white, to_color);
     }
+    console.log(this.state.finished_game);
+    if (finished_game) {
+      this.setState({ finished_game: true });
+      alert('End match');
+    }
   }
 
   handleKeyPress = (event) => {
-    //console.log("key pressed: ");
-    //console.log({charCode: event.charCode, key: event.key, keyCode: event.keyCode});
+    if (!this.state.finished_game) {
+      //console.log("key pressed: ");
+      //console.log({charCode: event.charCode, key: event.key, keyCode: event.keyCode});
 
-    // DROP
-    if (event.keyCode === 13) {
-      //console.log('DROP');
-      this.move_piece('drop');
-      return;
-    }
+    /* Rotations */
+      if (event.keyCode === 82 || event.keyCode === 32) {
+        //console.log('ROTATE RIGHT');
+        return;
+      }
+      if (event.keyCode === 88) {
+        //console.log('ROTATE LEFT');
+        return;
+      }
+    /* End Rotations */
 
-    // Rotations
-    if (event.keyCode === 82 || event.keyCode === 32) {
-      //console.log('ROTATE RIGHT');
-      return;
-    }
-    if (event.keyCode === 88) {
-      //console.log('ROTATE LEFT');
-      return;
-    }
+    /* Movement */
+      // MOVE RIGHT
+      if (event.keyCode === 65 || event.keyCode === 37) {
+        //console.log('MOVE LEFT');
+        this.move_piece('left');
+        return;
+      }
+      // MOVE RIGHT
+      if (event.keyCode === 68 || event.keyCode === 69 || event.keyCode === 39) {
+        //console.log('MOVE RIGHT');
+        this.move_piece('right');
+        return;
+      }
+      // MOVE BOTTOM
+      if (event.keyCode === 83 || event.keyCode === 79 || event.keyCode === 40) {
+        //console.log('MOVE BOTTOM');
+        this.move_piece('bottom');
+        return;
+      }
+      // DROP
+      if (event.keyCode === 13) {
+        //console.log('DROP');
+        this.move_piece('drop');
+        return;
+      }
+    /* End Movement */
 
-    // Pause
-    if (event.keyCode === 80) {
-      //console.log('PAUSE');
-      return;
-    }
 
-    // Movement
-    if (event.keyCode === 65 || event.keyCode === 37) {
-      //console.log('MOVE LEFT');
-      this.move_piece('left');
-      return;
-    }
-    if (event.keyCode === 68 || event.keyCode === 69 || event.keyCode === 39) {
-      //console.log('MOVE RIGHT');
-      this.move_piece('right');
-      return;
-    }
-    if (event.keyCode === 83 || event.keyCode === 79 || event.keyCode === 40) {
-      //console.log('MOVE BOTTOM');
-      this.move_piece('bottom');
-      return;
-    }
+    /* Hold piece */
+      if (event.keyCode === 72 || event.keyCode === 74 || event.keyCode === 16) {
+        //console.log('HOLD');
+        this.hold_piece();
+        return;
+      }
+    /* End Hold */
 
-    // Hold piece
-    if (event.keyCode === 72 || event.keyCode === 74 || event.keyCode === 16) {
-      console.log('HOLD');
-      this.hold_piece();
-      return;
+    /* Pause */
+      if (event.keyCode === 80) {
+        //console.log('PAUSE');
+        return;
+      }
+    /* End Pause */
     }
   }
 
