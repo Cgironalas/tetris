@@ -282,8 +282,6 @@ class Game extends React.Component {
   }
 
   generate_random_piece() {
-    this.check_finished_rows();
-    this.console_board();
     let piece_types = ['o','i','t','l','j','s','z'];
     let current_type_index = piece_types.indexOf(this.state.moving_piece.type);
     if (current_type_index > -1) {
@@ -295,6 +293,9 @@ class Game extends React.Component {
     console.log(new_piece);
 
     this.update_game(undefined, undefined, undefined, new_piece);
+    this.check_finished_rows();
+    this.console_board();
+
   }
 
   move_piece(direction) {
