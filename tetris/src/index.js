@@ -157,7 +157,7 @@ class Game extends React.Component {
       },
     });
     this.forceUpdate();
-    this.console_board();
+    //this.console_board();
   }
 
   check_finished_rows() {
@@ -186,7 +186,7 @@ class Game extends React.Component {
 
       let new_score = this.get_score(completed_rows);
 
-      this.console_board(new_board);
+      //this.console_board(new_board);
 
       this.update_game(new_score, undefined, undefined, undefined, new_board, undefined);
     }
@@ -224,7 +224,9 @@ class Game extends React.Component {
   }
 
   // default settings to create any new piece
-  create_piece(type) {
+  // if a type is given that piece will be created
+  // else it will create a random piece
+  create_piece(type = '') {
     switch(type) {
       case 'o':
         return {
@@ -275,7 +277,13 @@ class Game extends React.Component {
         }
 
       default:
-        break;
+        let piece_types = ['o', 'i', 't', 'l', 'j', 's', 'z'];
+        let current_type_index = piece_types.indexOf(this.state.moving_piece.type);
+        if (current_type_index > -1) {
+          piece_types.splice(current_type_index, 1);
+        }
+        let next_piece = piece_types[Math.floor(Math.random()*piece_types.length)];
+        return this.create_piece(next_piece);
     }
   }
 
@@ -288,42 +296,64 @@ class Game extends React.Component {
   }
 
   generate_new_piece(type = '') {
-    let new_piece, next_piece;
-    if (type === '') {
-      new_piece = this.create_piece(this.state.next_piece);
-      let piece_types = ['o','i','t','l','j','s','z'];
-      let current_type_index = piece_types.indexOf(this.state.moving_piece.type);
-      if (current_type_index > -1) {
-        piece_types.splice(current_type_index, 1);
-      }
+    let new_piece = this.create_piece(this.state.next_piece);
+    let piece_types = ['o','i','t','l','j','s','z'];
+    let current_type_index = piece_types.indexOf(this.state.moving_piece.type);
+    if (current_type_index > -1) {
+      piece_types.splice(current_type_index, 1);
+    }
 
-      next_piece = piece_types[Math.floor(Math.random()*piece_types.length)];
-    }
-    else {
-      new_piece = this.create_piece(type);
-      next_piece = this.state.next_piece;
-    }
+    let next_piece = piece_types[Math.floor(Math.random()*piece_types.length)];
+
+    this.update_game(undefined, next_piece, undefined, false, undefined, new_piece);
     console.log(new_piece);
+  }
 
-    this.update_game(undefined, next_piece, undefined, undefined, undefined, new_piece);
-    this.check_finished_rows();
-    this.console_board();
+  delete_piece(piece, board = this.state.board) {
+    let x, y;
+    let new_board = board.slice();
+    for ([x, y] of piece.coordinates) {
+      new_board[y][x] = 0;
+    }
+    return new_board;
+  }
 
+  paint_piece(piece, board = this.state.board) {
+    let x, y;
+    let color = piece.color;
+    let new_board = board.slice();
+    for ([x, y] of piece.coordinates) {
+      new_board[y][x] = color;
+    }
+    return new_board;
   }
 
   hold_piece() {
-    if (!this.state.hold_blocked) {
+    if (this.state.hold_blocked === false) {
       let current_hold = this.state.hold_piece;
-      this.update_game(undefined, undefined, this.state.moving_piece.type,
-                       true, undefined, undefined);
+      let old_piece = this.state.moving_piece;
+      let type = this.state.moving_piece.type;
+      let piece, next_piece, next_piece_type;
+
+      let board = this.delete_piece(old_piece);
 
       if (current_hold === ' ') {
-        this.generate_new_piece();
+        console.log('hold and create new');
+        piece = this.create_piece(this.state.next_piece);
+        console.log(piece);
+        next_piece = this.create_piece();
+        next_piece_type = next_piece.type;
+        console.log(next_piece);
       }
       else {
-        this.generate_new_piece(current_hold);
-        //this.swap_hold_with_moving(current_hold);
+        console.log('hold and switch');
+        piece = this.create_piece(current_hold);
       }
+      this.update_game(undefined, next_piece_type, type, true, board, piece);
+      console.log(this.state);
+    }
+    else {
+      console.log('you are already holding a piece');
     }
   }
 
@@ -335,7 +365,7 @@ class Game extends React.Component {
     let generate_new = false;
 
     let color = this.state.moving_piece.color;
-    let type = this.state.moving_piece.color;
+    let type = this.state.moving_piece.type;
     let coords = this.state.moving_piece.coordinates;
     let coords_obj = this.get_object_from_piece(this.state.moving_piece);
 
@@ -350,6 +380,10 @@ class Game extends React.Component {
             x--;
             to_color[[x, y]] = 0;
             new_coords.push([x,y]);
+            if (this.state.board[y][x] !== 0 && !coords_obj.hasOwnProperty([x, y])) {
+              generate_new = true;
+              break;
+            }
           }
           else {
             return;
@@ -362,6 +396,10 @@ class Game extends React.Component {
             x++;
             to_color[[x, y]] = 0;
             new_coords.push([x,y]);
+            if (this.state.board[y][x] !== 0 && !coords_obj.hasOwnProperty([x, y])) {
+              generate_new = true;
+              break;
+            }
           }
           else {
             return;
@@ -397,6 +435,10 @@ class Game extends React.Component {
     }
     if (generate_new) {
       this.generate_new_piece();
+      this.check_finished_rows();
+      this.check_finish_game();
+      this.console_board();
+
     }
     else {
       this.update_board({color: color, type: type, coordinates: new_coords}, to_white, to_color);
@@ -404,8 +446,8 @@ class Game extends React.Component {
   }
 
   handleKeyPress = (event) => {
-    console.log("key pressed: ");
-    console.log({charCode: event.charCode, key: event.key, keyCode: event.keyCode});
+    //console.log("key pressed: ");
+    //console.log({charCode: event.charCode, key: event.key, keyCode: event.keyCode});
 
     // DROP
     if (event.keyCode === 13) {
@@ -449,7 +491,7 @@ class Game extends React.Component {
 
     // Hold piece
     if (event.keyCode === 72 || event.keyCode === 74 || event.keyCode === 16) {
-      //console.log('HOLD');
+      console.log('HOLD');
       this.hold_piece();
       return;
     }
@@ -463,13 +505,13 @@ class Game extends React.Component {
           <Board rows={this.state.board} />
         </div>
         <div className="game-info">
-          <div>Score</div>
+          <div><b>Score</b></div>
           <div>{this.state.score}</div>
-          <div>Next Piece</div>
+          <div><b>Next Piece</b></div>
           <div>{this.state.next_piece}</div>
-          <div>Hold Piece</div>
-          <div>{this.state.hold_piece}</div>
-          <div>Leaderboard</div>
+          <div><b>Hold Piece</b></div>
+          <div>{this.state.hold_piece === ' ' ? 'Not holding a piece' : this.state.hold_piece}</div>
+          <div><b>Leaderboard</b></div>
           <div>{leaderboard}</div>
         </div>
       </div>
