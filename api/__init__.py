@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask
+from flask import Flask, request
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
@@ -21,6 +21,11 @@ def create_app(test_config=None):
 
     from . import db
     db.init_app(app)
+
+    @app.after_request
+    def apply_cors(response):
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
 
     @app.route('/<string:name>/<int:score>/register', methods=('GET', 'POST'))
     def register(name, score):
@@ -43,7 +48,7 @@ def create_app(test_config=None):
         flash(error)
         return 'There was an error with the request.'
 
-    @app.route('/leaderboard')
+    @app.route('/leaderboard', methods=('GET', 'POST'))
     def index():
         dbi = db.get_db()
         posts = dbi.execute(

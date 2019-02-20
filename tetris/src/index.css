@@ -92,6 +92,26 @@ ol, ul {
 }
 
 .game-info {
-  margin-left: 20px;
+  margin-left: 10px;
+  margin-top: 10px;
+}
+
+.game-detail {
+  margin-left: 10px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #555555;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even){
+  background-color: #dddddd;
 }
 

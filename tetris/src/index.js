@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import  axios from 'axios';
 import './index.css';
 
 // A block of the board, considered as a 1x1 within the board.
@@ -15,8 +16,6 @@ class Row extends React.Component {
   render_block(i) {
     return (
       <Block
-        y={this.props.height}
-        x={i}
         color={this.props.blocks[i]}
       />
     );
@@ -45,7 +44,6 @@ class Board extends React.Component {
   render_row(i) {
     return (
       <Row
-        height={i}
         blocks={this.props.rows[i]}
       />
     );
@@ -85,6 +83,7 @@ class Game extends React.Component {
     super(props);
     this.state = {
       finished_game: false,
+      submitted: false,
       score: 0,
       next_piece: 'i',
       hold_piece: ' ',
@@ -97,7 +96,47 @@ class Game extends React.Component {
         type: 'i',
         coordinates: [[5, 10],[6,10],[7,10],[8,10]],
       },
+      leaderboard: [],
     }
+  }
+
+  update_game(
+    score = this.state.score,
+    next_piece = this.state.next_piece,
+    hold_piece = this.state.hold_piece,
+    hold_blocked = this.state.hold_blocked,
+    board = this.state.board,
+    moving_piece = this.state.moving_piece,
+    leaderboard = this.state.leaderboard,
+  ) {
+    this.setState({
+      finished_game: false,
+      submitted: false,
+      score: score,
+      next_piece: next_piece,
+      hold_piece: hold_piece,
+      hold_blocked: hold_blocked,
+      board: board.slice(),
+      moving_piece: {
+        color: moving_piece.color,
+        type: moving_piece.type,
+        coordinates: moving_piece.coordinates,
+      },
+      leaderboard: leaderboard,
+    });
+    this.forceUpdate();
+    //this.console_board();
+  }
+
+  componentDidMount() {
+    axios.get('http://localhost:5000/leaderboard')
+      .then(res => {
+        const rankings = res.data.split(';').map((value, index) => {
+          let user = value.split(',');
+          return { name: user[0], score: user[1] };
+        });
+        this.update_game(undefined, undefined, undefined, undefined, undefined, undefined, rankings);
+      });
   }
 
   // Print the game board on console.
@@ -134,31 +173,6 @@ class Game extends React.Component {
       let multiplier = this.get_multiplier(rows_completed);
       return this.state.score + ((rows_completed * 500) * multiplier);
     }
-  }
-
-  update_game(
-    score = this.state.score,
-    next_piece = this.state.next_piece,
-    hold_piece = this.state.hold_piece,
-    hold_blocked = this.state.hold_blocked,
-    board = this.state.board,
-    moving_piece = this.state.moving_piece
-  ) {
-    this.setState({
-      finished_game: false,
-      score: score,
-      next_piece: next_piece,
-      hold_piece: hold_piece,
-      hold_blocked: hold_blocked,
-      board: board.slice(),
-      moving_piece: {
-        color: moving_piece.color,
-        type: moving_piece.type,
-        coordinates: moving_piece.coordinates,
-      },
-    });
-    this.forceUpdate();
-    //this.console_board();
   }
 
   check_finished_rows() {
@@ -518,22 +532,51 @@ class Game extends React.Component {
     }
   }
 
+  submit_score () {
+    console.log('submit score');
+    //this.setState({ finished_game: true, submitted: true });
+    console.log('there');
+    return;
+  }
+
   render() {
-    const leaderboard = "";
     return (
       <div className="game" onKeyDown={this.handleKeyPress}>
         <div className="game-board">
           <Board rows={this.state.board} />
         </div>
         <div className="game-info">
-          <div><b>Score</b></div>
-          <div>{this.state.score}</div>
-          <div><b>Next Piece</b></div>
-          <div>{this.state.next_piece}</div>
-          <div><b>Hold Piece</b></div>
-          <div>{this.state.hold_piece === ' ' ? 'Not holding a piece' : this.state.hold_piece}</div>
-          <div><b>Leaderboard</b></div>
-          <div>{leaderboard}</div>
+          <div className='game-info'><b>Score</b></div>
+          <div className='game-detail'>{this.state.score}</div>
+
+          <div className='game-info'><b>Next Piece</b></div>
+          <div className='game-detail'>{this.state.next_piece}</div>
+
+          <div className='game-info'><b>Hold Piece</b></div>
+          <div className='game-detail'>{
+            this.state.hold_piece === ' ' ?
+              'Not holding a piece' : this.state.hold_piece
+          }</div>
+
+          <div className='game-info'><b>Leaderboard</b></div>
+          <table className='game-detail'>
+            <thead>
+              <tr>
+                <th>User name</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                this.state.leaderboard.map((ranker, index) => {
+                  return <tr key={index}><td>{ranker.name}</td><td>{ranker.score}</td></tr>
+                })
+              }
+            </tbody>
+          </table>
+          {
+            this.state.finished_game ? <button type='button' disabled={this.state.submitted} onClick={this.submit_score}>Submit Score</button> : null
+          }
         </div>
       </div>
     );
