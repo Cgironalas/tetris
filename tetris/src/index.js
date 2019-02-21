@@ -687,9 +687,9 @@ class Game extends React.Component {
         <div className='pause'>
           {
             this.state.paused ?
-              <h1>
-                GAME PAUSED
-              </h1>
+              this.state.next_piece === ' ' ?
+                <h1>NEW GAME</h1>
+              : <h1>GAME PAUSED</h1>
             : null
           }
           <br/>
@@ -736,6 +736,7 @@ class Game extends React.Component {
                 <input
                   className='game-detail'
                   type='text'
+                  placeholder='Type your name here'
                   onChange={this.capture_input} />
                 <button className='game-detail' type='button' disabled={this.state.submitted} onClick={this.submit_score}>
                   Submit Score
