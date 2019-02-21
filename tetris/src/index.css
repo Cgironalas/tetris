@@ -100,6 +100,11 @@ ol, ul {
   margin-left: 10px;
 }
 
+.pause {
+  color: #cc0000;
+  margin: 0px 20px;
+}
+
 table {
   border-collapse: collapse;
   width: 100%;
@@ -114,4 +119,3 @@ td, th {
 tr:nth-child(even){
   background-color: #dddddd;
 }
-

@@ -82,61 +82,32 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      finished_game: false,
-      submitted: false,
+      // Side Data
       score: 0,
       next_piece: 'i',
       hold_piece: ' ',
       hold_blocked: false,
-      board: Array(21).fill(
+      leaderboard: [],
+
+      // In Board components
+      board: Array(22).fill(
         Array(10).fill(0)
       ),
       moving_piece: {
         color: 2,
         type: 'i',
-        coordinates: [[5, 10],[6,10],[7,10],[8,10]],
+        coords: [[5, 10],[6,10],[7,10],[8,10]],
       },
-      leaderboard: [],
-    }
-  }
 
-  update_game(
-    score = this.state.score,
-    next_piece = this.state.next_piece,
-    hold_piece = this.state.hold_piece,
-    hold_blocked = this.state.hold_blocked,
-    board = this.state.board,
-    moving_piece = this.state.moving_piece,
-    leaderboard = this.state.leaderboard,
-  ) {
-    this.setState({
-      finished_game: false,
+      // Timer Interval
+      counter: 29,   // will reset and fetch leaderboard every 30s
+      timer: 1000,  // how ofter the piece will automatically go down
+
+      // General Game State
+      paused: false,
       submitted: false,
-      score: score,
-      next_piece: next_piece,
-      hold_piece: hold_piece,
-      hold_blocked: hold_blocked,
-      board: board.slice(),
-      moving_piece: {
-        color: moving_piece.color,
-        type: moving_piece.type,
-        coordinates: moving_piece.coordinates,
-      },
-      leaderboard: leaderboard,
-    });
-    this.forceUpdate();
-    //this.console_board();
-  }
-
-  componentDidMount() {
-    axios.get('http://localhost:5000/leaderboard')
-      .then(res => {
-        const rankings = res.data.split(';').map((value, index) => {
-          let user = value.split(',');
-          return { name: user[0], score: user[1] };
-        });
-        this.update_game(undefined, undefined, undefined, undefined, undefined, undefined, rankings);
-      });
+      finished_game: false,
+    }
   }
 
   // Print the game board on console.
@@ -149,6 +120,46 @@ class Game extends React.Component {
     console.log(output);
   }
 
+/* For automatic component updates */
+  // update_leaderboard, componentDidMount and componentWillUnmount
+
+  // Fetch the leaderboard from the API
+  update_leaderboard() {
+    axios.get('http://localhost:5000/leaderboard')
+      .then(res => {
+        // Get the data and format it as a list of objects with name and score.
+        const rankings = res.data.split(';').map((value, index) => {
+          let user = value.split(',');
+          return { name: user[0], score: user[1] };
+        });
+        this.setState({leaderboard: rankings});
+      });
+  }
+
+  componentDidMount() {
+    this.interval = setInterval(() => {
+      let counter = this.state.counter;
+      counter++;
+      if (!this.state.finished_game && !this.state.paused) {
+        this.move_piece('down');
+      }
+      if (counter === 30) {
+        this.setState({ counter: 0 });
+        this.update_leaderboard();
+      }
+      else {
+        this.setState({ counter: counter });
+      }
+    }, this.state.timer)
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+/* End for automatic component updates*/
+
+/* Score related functions */
+  // get_multiplier and get_score
   // Get the score multiplier to use based on completed rows in a turn.
   get_multiplier(rows_completed) {
     let multiplier;
@@ -174,40 +185,143 @@ class Game extends React.Component {
       return this.state.score + ((rows_completed * 500) * multiplier);
     }
   }
+/* End score related functions */
 
-  check_finished_rows() {
-    console.log('checking finished rows');
-    let new_board = [];
-    let completed_rows = 0;
+/* Piece generation and data functions*/
+  // get_coords_object, generate_next_piece_type
+  // get_piece and get_new_piece
 
-    // Check to see if any row is complete (no block as 0)
-    for (let row of this.state.board) {
-      if (row.indexOf(0) > -1) {
-        new_board.push(row);
-      }
-      else {
-        completed_rows++;
-      }
+  // Will return an object with the piece coords where the keys will be
+  // [x, y] as a string and the values all 0s.
+  get_coords_object(piece) {
+    let obj = {};
+    for (let coords of piece.coords) {
+      obj[coords] = 0;
     }
-    console.log({ lines_completed: completed_rows });
+    return obj;
+  }
 
-    // If there are completed rows delete them
-    if  (completed_rows > 0) {
-      // Finish filling the board with 0s
-      for (let y = 0; y < completed_rows; y++) {
-        let temp_row = Array(10).fill(0);
-        new_board.push(temp_row);
-      }
+  // Will return the string character to be used for the next piece.
+  generate_next_piece_type() {
+    // piece_types is hard coded since those are the standard piece types for
+    // the tetris game.
+    let piece_types = ['o','i','t','l','j','s','z'];
+    let current_type_index = piece_types.indexOf(this.state.moving_piece.type);
+    if (current_type_index > -1) {
+      piece_types.splice(current_type_index, 1);
+    }
 
-      let new_score = this.get_score(completed_rows);
+    let next_piece_type =
+      piece_types[Math.floor(Math.random()*piece_types.length)];
+    return next_piece_type;
+  }
 
-      //this.console_board(new_board);
+  // Default settings to create any new piece.
+  // if a type is given that piece will be created
+  // else it will create a random piece
+  get_piece(type = '') {
+    switch(type) {
+      case 'o':
+        return {
+          color: 1,
+          type: 'o',
+          coords: [[4,21],[5,21],[4,20],[5,20]],
+        }
 
-      this.update_game(new_score, undefined, undefined, undefined, new_board, undefined);
+      case 'i':
+        return {
+          color: 2,
+          type: 'i',
+          coords: [[3,20],[4,20],[5,20],[6,20]],
+        }
+
+      case 't':
+        return {
+          color: 3,
+          type: 't',
+          coords: [[4,21],[3,20],[4,20],[5,20]],
+        }
+
+      case 'l':
+        return {
+          color: 4,
+          type: 'l',
+          coords: [[5,21],[3,20],[4,20],[5,20]],
+        }
+
+      case 'j':
+        return {
+          color: 5,
+          type: 'j',
+          coords: [[3,21],[3,20],[4,20],[5,20]],
+        }
+
+      case 's':
+        return {
+          color: 6,
+          type: 's',
+          coords: [[4,21],[5,21],[3,20],[4,20]],
+        }
+
+      case 'z':
+        return {
+          color: 7,
+          type: 'z',
+          coords: [[3,21],[4,21],[4,20],[5,20]],
+        }
+
+      default://random piece
+        let next_piece = this.generate_next_piece_type();
+        return this.get_piece(next_piece);
     }
   }
 
+  // Will create a new piece based on the type in next_piece and randomly
+  // generate a new next_piece type that won't be a repeat of the last one.
+  get_new_piece(type = '') {
+    let new_piece = this.get_piece(this.state.next_piece);
+    let next_piece_type = this.generate_next_piece_type();
+
+    this.setState({
+      next_piece: next_piece_type,
+      moving_piece: {
+        type: new_piece.type,
+        color: new_piece.color,
+        coords: new_piece.coords,
+      },
+      hold_blocked: false,
+    });
+    this.forceUpdate();
+  }
+/* End piece generation */
+
+/* Board repainting */
+  // erase_piece, paint_piece, update_board, check_finished_rows
+  //NOT IMPLEMENTED
+  erase_piece(piece, board = this.state.board) {
+    let x, y;
+    let new_board = board.slice();
+    for ([x, y] of piece.coords) {
+      new_board[y][x] = 0;
+    }
+    return new_board;
+  }
+  //NOT IMPLEMENTED
+  paint_piece(piece, board = this.state.board) {
+    let x, y;
+    let color = piece.color;
+    let new_board = board.slice();
+    for ([x, y] of piece.coords) {
+      new_board[y][x] = color;
+    }
+    return new_board;
+  }
+
+  // Erases old piece, paints the new one and re-renders
   update_board(moving_piece, to_white, to_color) {
+    //let new_board;
+    //new_board = erase_piece(old_piece);
+    //new_board = paint_piece(new_piece, new_board);
     let x, y; // x and y used to traverse the game board.
     let temp_coords;
     let temp_row = [];
@@ -235,112 +349,60 @@ class Game extends React.Component {
       new_board.push(temp_row);
     }
 
-    this.update_game(undefined, undefined, undefined, undefined, new_board, moving_piece);
+    this.setState({
+      board: new_board,
+      moving_piece: {
+        type: moving_piece.type,
+        color: moving_piece.color,
+        coords: moving_piece.coords,
+      }
+    });
+    this.forceUpdate();
   }
 
-  // default settings to create any new piece
-  // if a type is given that piece will be created
-  // else it will create a random piece
-  create_piece(type = '') {
-    switch(type) {
-      case 'o':
-        return {
-          color: 1,
-          type: 'o',
-          coordinates: [[4,21],[5,21],[4,20],[5,20]],
-        }
+  /*
+    Checks every row to see if it was completely filled. Each filled row will
+    be ignored for the next version of the board, the score will be added
+    accordingly and the board will be topped again.
+    Forces re-render.
+  */
+  check_finished_rows() {
+    //console.log('\nChecking finished rows...');
+    let new_board = [];
+    let completed_rows = 0;
 
-      case 'i':
-        return {
-          color: 2,
-          type: 'i',
-          coordinates: [[3,20],[4,20],[5,20],[6,20]],
-        }
-      case 't':
-        return {
-          color: 3,
-          type: 't',
-          coordinates: [[4,21],[3,20],[4,20],[5,20]],
-        }
-
-      case 'l':
-        return {
-          color: 4,
-          type: 'l',
-          coordinates: [[5,21],[3,20],[4,20],[5,20]],
-        }
-
-      case 'j':
-        return {
-          color: 5,
-          type: 'j',
-          coordinates: [[3,21],[3,20],[4,20],[5,20]],
-        }
-
-      case 's':
-        return {
-          color: 6,
-          type: 's',
-          coordinates: [[4,21],[5,21],[3,20],[4,20]],
-        }
-
-      case 'z':
-        return {
-          color: 7,
-          type: 'z',
-          coordinates: [[3,21],[4,21],[4,20],[5,20]],
-        }
-
-      default:
-        let piece_types = ['o', 'i', 't', 'l', 'j', 's', 'z'];
-        let current_type_index = piece_types.indexOf(this.state.moving_piece.type);
-        if (current_type_index > -1) {
-          piece_types.splice(current_type_index, 1);
-        }
-        let next_piece = piece_types[Math.floor(Math.random()*piece_types.length)];
-        return this.create_piece(next_piece);
+    // Check to see if any row is complete (no block as 0)
+    for (let row of this.state.board) {
+      if (row.indexOf(0) > -1) {
+        new_board.push(row);
+      }
+      else {
+        completed_rows++;
+      }
     }
-  }
+    //console.log('lines completed: ' + completed_rows);
 
-  get_object_from_piece(piece) {
-    let obj = {};
-    for (let coordinates of piece.coordinates) {
-      obj[coordinates] = 0;
+    if (completed_rows > 0) {
+      // Finish filling the board with 0s
+      for (let y = 0; y < completed_rows; y++) {
+        let temp_row = Array(10).fill(0);
+        new_board.push(temp_row);
+      }
+      //this.console_board(new_board);
+
+      // Get the new score.
+      let new_score = this.get_score(completed_rows);
+      //console.log('new score: ' + new_score);
+
+      let new_timer = this.state.timer - (completed_rows * 10);
+
+      this.setState({
+        score: new_score,
+        board: new_board,
+        timer: new_timer,
+      });
+      this.forceUpdate();
     }
-    return obj;
-  }
-
-  generate_new_piece(type = '') {
-    let new_piece = this.create_piece(this.state.next_piece);
-    let piece_types = ['o','i','t','l','j','s','z'];
-    let current_type_index = piece_types.indexOf(this.state.moving_piece.type);
-    if (current_type_index > -1) {
-      piece_types.splice(current_type_index, 1);
-    }
-
-    let next_piece = piece_types[Math.floor(Math.random()*piece_types.length)];
-
-    this.update_game(undefined, next_piece, undefined, false, undefined, new_piece);
-    console.log(new_piece);
-  }
-
-  delete_piece(piece, board = this.state.board) {
-    let x, y;
-    let new_board = board.slice();
-    for ([x, y] of piece.coordinates) {
-      new_board[y][x] = 0;
-    }
-    return new_board;
-  }
-
-  paint_piece(piece, board = this.state.board) {
-    let x, y;
-    let color = piece.color;
-    let new_board = board.slice();
-    for ([x, y] of piece.coordinates) {
-      new_board[y][x] = color;
-    }
-    return new_board;
   }
 
   hold_piece() {
@@ -348,29 +410,42 @@ class Game extends React.Component {
       let current_hold = this.state.hold_piece;
       let old_piece = this.state.moving_piece;
       let type = this.state.moving_piece.type;
-      let piece, next_piece, next_piece_type;
+      let piece, next_piece;
 
-      let board = this.delete_piece(old_piece);
+      let board = this.erase_piece(old_piece);
 
       if (current_hold === ' ') {
-        console.log('hold and create new');
-        piece = this.create_piece(this.state.next_piece);
-        console.log(piece);
-        next_piece = this.create_piece();
-        next_piece_type = next_piece.type;
-        console.log(next_piece);
+        //console.log('hold and create new');
+        piece = this.get_piece(this.state.next_piece);
+        //console.log(piece);
+        next_piece = this.generate_next_piece_type();
       }
       else {
-        console.log('hold and switch');
-        piece = this.create_piece(current_hold);
+        //console.log('hold and switch');
+        piece = this.get_piece(current_hold);
+        next_piece = this.state.next_piece;
       }
-      this.update_game(undefined, next_piece_type, type, true, board, piece);
-      console.log(this.state);
+      this.setState({
+        next_piece: next_piece,
+        hold_piece: type,
+        hold_blocked: true,
+        board: board.slice(),
+        moving_piece: {
+          color: piece.color,
+          type: piece.type,
+          coords: piece.coords,
+        }
+      });
+      this.forceUpdate();
     }
     else {
       console.log('you are already holding a piece');
     }
   }
+/* End board repainting */
+
+/* Piece movement */
+  // move_piece, remove_pause, handleKeyPress
 
   move_piece(direction) {
     let x, y;
@@ -382,8 +457,8 @@ class Game extends React.Component {
 
     let type = this.state.moving_piece.type;
     let color = this.state.moving_piece.color;
-    let coords = this.state.moving_piece.coordinates;
-    let coords_obj = this.get_object_from_piece(this.state.moving_piece);
+    let coords = this.state.moving_piece.coords;
+    let coords_obj = this.get_coords_object(this.state.moving_piece);
 
     for ([x, y] of coords) {
       //x = pair[0];
@@ -433,7 +508,6 @@ class Game extends React.Component {
             to_color[[x, y]] = 0;
             new_coords.push([x,y]);
             if (this.state.board[y][x] !== 0 && !coords_obj.hasOwnProperty([x, y])) {
-              console.log('y is: ' + y);
               if (y >= 19) {
                 finished_game = true;
                 break;
@@ -455,18 +529,22 @@ class Game extends React.Component {
       }
     }
     if (generate_new) {
-      this.generate_new_piece();
+      this.get_new_piece();
       this.check_finished_rows();
-      this.console_board();
+      //this.console_board();
     }
     else {
-      this.update_board({color: color, type: type, coordinates: new_coords}, to_white, to_color);
+      this.update_board({color: color, type: type, coords: new_coords}, to_white, to_color);
     }
-    console.log(this.state.finished_game);
     if (finished_game) {
       this.setState({ finished_game: true });
       alert('End match');
     }
+  }
+
+  remove_pause(){
+    this.setState({ paused: false });
+    this.forceUpdate();
   }
 
   handleKeyPress = (event) => {
@@ -477,10 +555,12 @@ class Game extends React.Component {
     /* Rotations */
       if (event.keyCode === 82 || event.keyCode === 32) {
         //console.log('ROTATE RIGHT');
+        this.remove_pause();
         return;
       }
       if (event.keyCode === 88) {
         //console.log('ROTATE LEFT');
+        this.remove_pause();
         return;
       }
     /* End Rotations */
@@ -489,33 +569,37 @@ class Game extends React.Component {
       // MOVE RIGHT
       if (event.keyCode === 65 || event.keyCode === 37) {
         //console.log('MOVE LEFT');
+        this.remove_pause();
         this.move_piece('left');
         return;
       }
       // MOVE RIGHT
       if (event.keyCode === 68 || event.keyCode === 69 || event.keyCode === 39) {
         //console.log('MOVE RIGHT');
+        this.remove_pause();
         this.move_piece('right');
         return;
       }
       // MOVE BOTTOM
       if (event.keyCode === 83 || event.keyCode === 79 || event.keyCode === 40) {
         //console.log('MOVE BOTTOM');
+        this.remove_pause();
         this.move_piece('bottom');
         return;
       }
       // DROP
       if (event.keyCode === 13) {
         //console.log('DROP');
+        this.remove_pause();
         this.move_piece('drop');
         return;
       }
     /* End Movement */
 
-
     /* Hold piece */
       if (event.keyCode === 72 || event.keyCode === 74 || event.keyCode === 16) {
         //console.log('HOLD');
+        this.remove_pause();
         this.hold_piece();
         return;
       }
@@ -523,23 +607,30 @@ class Game extends React.Component {
 
     /* Pause */
       if (event.keyCode === 80) {
-        //console.log('PAUSE');
+        //console.log('pause');
+        this.setState({ paused: !this.state.paused });
+        this.forceUpdate();
         return;
       }
     /* End Pause */
     }
   }
-
-  submit_score () {
-    console.log('submit score');
-    //this.setState({ finished_game: true, submitted: true });
-    console.log('there');
-    return;
-  }
+/* End piece movement */
 
   render() {
     return (
       <div className="game" onKeyDown={this.handleKeyPress}>
+        <div className='pause'>
+          {
+            this.state.paused ?
+              <h1>
+                GAME PAUSED
+              </h1>
+            : null
+          }
+          <br/>
+        </div>
+
         <div className="game-board">
           <Board rows={this.state.board} />
         </div>
