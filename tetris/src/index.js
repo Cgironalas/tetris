@@ -84,7 +84,7 @@ class Game extends React.Component {
     this.state = {
       // Side Data
       score: 0,
-      next_piece: 'i',
+      next_piece: ' ',
       hold_piece: ' ',
       hold_blocked: false,
       leaderboard: [],
@@ -104,7 +104,7 @@ class Game extends React.Component {
       timer: 1000,  // how ofter the piece will automatically go down
 
       // General Game State
-      paused: false,
+      paused: true,
       submitted: false,
       finished_game: false,
     }
@@ -617,6 +617,70 @@ class Game extends React.Component {
   }
 /* End piece movement */
 
+/* Button handlers */
+  game_start = (event) => {
+    let piece, next_piece;
+    next_piece = this.generate_next_piece_type();
+    piece = this.get_piece();
+
+    this.setState({
+      next_piece: next_piece,
+      moving_piece: {
+        color: piece.color,
+        type: piece.type,
+        coords: piece.coords,
+      },
+      paused: false,
+    });
+    this.forceUpdate();
+  }
+
+  submit_score = (event) => {
+    this.setState({ submitted: true });
+    let link = 'http://localhost:5000/' + this.state.name + '/' + this.state.score + '/register';
+    console.log(link);
+    axios.get(link)
+      .then(res => {
+        // Get the data and format it as a list of objects with name and score.
+        const data = res.data;
+        console.log(data);
+        this.setState({
+          score: 0,
+          next_piece: ' ',
+          hold_piece: ' ',
+          hold_blocked: false,
+          leaderboard: [],
+
+          // In Board components
+          board: Array(22).fill(
+            Array(10).fill(0)
+          ),
+          moving_piece: {
+            color: 2,
+            type: 'i',
+            coords: [[5, 10],[6,10],[7,10],[8,10]],
+          },
+
+          // Timer Interval
+          counter: 29,   // will reset and fetch leaderboard every 30s
+          timer: 1000,  // how ofter the piece will automatically go down
+
+          // General Game State
+          paused: true,
+          submitted: false,
+          finished_game: false,
+        });
+        this.forceUpdate();
+        this.update_leaderboard();
+      });
+  }
+
+  capture_input = (event) => {
+    this.setState({ name: event.target.value });
+  }
+
+/* End button handlers */
+
   render() {
     return (
       <div className="game" onKeyDown={this.handleKeyPress}>
@@ -664,7 +728,20 @@ class Game extends React.Component {
             </tbody>
           </table>
           {
-            this.state.finished_game ? <button type='button' disabled={this.state.submitted} onClick={this.submit_score}>Submit Score</button> : null
+            this.state.next_piece === ' ' ? <button className='game-info' type='button' onClick={this.game_start}>Start Game</button> : null
+          }
+          {
+            this.state.finished_game ?
+              <div className='game-info'>
+                <input
+                  className='game-detail'
+                  type='text'
+                  onChange={this.capture_input} />
+                <button className='game-detail' type='button' disabled={this.state.submitted} onClick={this.submit_score}>
+                  Submit Score
+                </button>
+              </div>
+            : null
           }
         </div>
       </div>
