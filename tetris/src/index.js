@@ -459,6 +459,8 @@ class Game extends React.Component {
     let color = this.state.moving_piece.color;
     let coords = this.state.moving_piece.coords;
     let coords_obj = this.get_coords_object(this.state.moving_piece);
+    let min_height = 21;
+    let counter = 99;
 
     for ([x, y] of coords) {
       //x = pair[0];
@@ -496,9 +498,37 @@ class Game extends React.Component {
           break;
 
         case 'drop':
+          if (y === 0) {
+            return;
+          }
+          min_height = Math.min(22, y);
+          let counter_aux = 0;
+          let aux;
+          for(aux = min_height - 1; aux >= 0; aux--) {
+            counter_aux++;
+            console.log({
+              x: x,
+              y: y,
+              aux: aux,
+              block: this.state.board[aux][x],
+              check: coords_obj.hasOwnProperty([x, aux])
+            });
+            if (this.state.board[aux][x] !== 0 && !coords_obj.hasOwnProperty([x, aux])) {
+              console.log({height: aux, counter: counter_aux});
+              min_height = aux;
+              counter = Math.min(counter_aux - 1, counter);
+              console.log(counter);
+            }
+          }
+          if (counter === 99) {
+            min_height = 0;
+            counter = Math.min(counter_aux - 1, counter);
+          }
+
+
           to_white[[x, y]] = 0;
-          to_color[[x, y]] = 0;
-          new_coords.push([x,y]);
+          //to_color[[x, y]] = 0;
+          //new_coords.push([x,y]);
           break;
 
         default:
@@ -528,12 +558,20 @@ class Game extends React.Component {
         break;
       }
     }
+    if (direction === 'drop') {
+      for([x, y] of coords) {
+        y -= counter;
+        to_color[[x, y]] = 0;
+        new_coords.push([x,y]);
+      }
+    }
     if (generate_new) {
       this.get_new_piece();
       this.check_finished_rows();
       //this.console_board();
     }
     else {
+      console.log({color: color, type: type, coords: new_coords});
       this.update_board({color: color, type: type, coords: new_coords}, to_white, to_color);
     }
     if (finished_game) {
@@ -566,7 +604,7 @@ class Game extends React.Component {
     /* End Rotations */
 
     /* Movement */
-      // MOVE RIGHT
+      // MOVE LEFT
       if (event.keyCode === 65 || event.keyCode === 37) {
         //console.log('MOVE LEFT');
         this.remove_pause();
@@ -589,7 +627,7 @@ class Game extends React.Component {
       }
       // DROP
       if (event.keyCode === 13) {
-        //console.log('DROP');
+        console.log('DROP');
         this.remove_pause();
         this.move_piece('drop');
         return;
