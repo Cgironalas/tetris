@@ -397,8 +397,7 @@ class Game extends React.Component {
             to_color[[x, y]] = 0;
             new_coords.push([x,y]);
             if (this.state.board[y][x] !== 0 && !coords_obj.hasOwnProperty([x, y])) {
-              generate_new = true;
-              break;
+              return;
             }
           }
           else {
@@ -413,8 +412,7 @@ class Game extends React.Component {
             to_color[[x, y]] = 0;
             new_coords.push([x,y]);
             if (this.state.board[y][x] !== 0 && !coords_obj.hasOwnProperty([x, y])) {
-              generate_new = true;
-              break;
+              return;
             }
           }
           else {
