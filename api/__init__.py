@@ -49,12 +49,16 @@ def create_app(test_config=None):
         return 'There was an error with the request.'
 
     @app.route('/leaderboard', methods=('GET', 'POST'))
-    def index():
+    def leaderboard():
         dbi = db.get_db()
         posts = dbi.execute(
             'SELECT name, score FROM Leaderboard ORDER BY score DESC'
         ).fetchall()
         posts_string = ';'.join('{},{}'.format(key, val) for key, val in posts)
         return posts_string
+
+    @app.route('/')
+    def index():
+        return 'Flask API Running'
 
     return app
