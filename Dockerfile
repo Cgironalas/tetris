@@ -2,8 +2,8 @@ FROM python:3.7-slim
 
 WORKDIR /
 
-COPY . /api
-COPY ../db /db
+COPY ./api /api
+COPY ./db /db
 
 RUN pip install Flask
 
