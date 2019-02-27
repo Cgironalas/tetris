@@ -17,10 +17,9 @@ To run the `tetris_game` docker image as a standalone run:
   `docker build --tag=tetris_game .`
   `docker run -p 3000:3000 tetris_game`
 
-
-DB (postgres) docker:
-* Run: `docker run --name tetris_db -e POSTGRES_PASSWORD=tetris_pass -d postgres`
-  * This will download and run the postgres container.
-* To access the Database use:
-`docker run -it --rm --link tetris_db:postgres postgres psql -h postgres -U postgres`
-
+To run the `tetris_db` docker image as a standalone run:
+`docker run -p 5555:5432 cgironalas/tetris_db:latest`.
+  * To run it from the source code run and test with psql:
+  `cd db`
+  `docker build --tag=tetris_db .`
+  `docker run -p 5555:5432 tetris_db`
