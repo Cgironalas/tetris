@@ -1,64 +1,57 @@
-import os
-
 from flask import Flask, request
+from flask_sqlalchemy import SQLAlchemy
 
-def create_app(test_config=None):
-    app = Flask(__name__, instance_relative_config=True)
-    app.config.from_mapping(
-        SECRET_KEY='dev',
-        DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
-    )
+POSTGRES_USER = "tetris_user"
+POSTGRES_PW = "tetris_pass"
+POSTGRES_URL = "0.0.0.0:5555"
+POSTGRES_DB = "tetris"
 
-    if test_config is None:
-        app.config.from_pyfile('config.py', silent=True)
-    else:
-        app.config.from_mapping(test_config)
+app = Flask(__name__, instance_relative_config=True)
 
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
+DB_URL = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'.format(user=POSTGRES_USER,pw=POSTGRES_PW,url=POSTGRES_URL,db=POSTGRES_DB)
+app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    from . import db
-    db.init_app(app)
+db = SQLAlchemy(app)
 
-    @app.after_request
-    def apply_cors(response):
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        return response
+class Leaderboard(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=False, nullable=False)
+    score = db.Column(db.Integer, unique=False, nullable=False)
 
-    @app.route('/<string:name>/<int:score>/register', methods=('GET', 'POST'))
-    def register(name, score):
-        dbi = db.get_db()
-        error = None
+    def __repr__(self):
+        return '%s,%s' % (self.name, self.score)
 
-        if not name:
-            error = 'A name should be sent.'
-        elif not score:
-            error = 'A score should be sent.'
+@app.after_request
+def apply_cors(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
-        if error is None:
-            dbi.execute(
-                'INSERT INTO Leaderboard (name, score) VALUES (?, ?)',
-                (name, score)
-            )
-            dbi.commit()
-            return 'Added to Leaderboard'
+@app.route('/<string:name>/<int:score>/register', methods=('GET', 'POST'))
+def register(name, score):
+    error = None
 
-        flash(error)
-        return 'There was an error with the request.'
+    if not name:
+        error = 'A name should be sent.'
+    elif not score:
+        error = 'A score should be sent.'
 
-    @app.route('/leaderboard', methods=('GET', 'POST'))
-    def leaderboard():
-        dbi = db.get_db()
-        posts = dbi.execute(
-            'SELECT name, score FROM Leaderboard ORDER BY score DESC'
-        ).fetchall()
-        posts_string = ';'.join('{},{}'.format(key, val) for key, val in posts)
-        return posts_string
+    if error is None:
+        new_registry = Leaderboard(name=name, score=score)
+        db.session.add(new_registry)
+        db.session.commit()
+        return 'Added to Leaderboard'
 
-    @app.route('/')
-    def index():
-        return 'Flask API Running'
+    flash(error)
+    return 'There was an error with the request.'
 
-    return app
+@app.route('/leaderboard', methods=('GET', 'POST'))
+def leaderboard():
+    posts = Leaderboard.query.limit(10).all()
+    print(posts)
+    posts_string = ';'.join('{},{}'.format(ranker.name, ranker.score) for ranker in posts)
+    return posts_string
+
+@app.route('/')
+def index():
+    return 'Flask API Running'
