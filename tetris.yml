@@ -1,8 +1,8 @@
-#db:
-  #image: tetris_db
-  #restart: always
-  #environment:
-    #POSTGRES_PASSWORD: tetris_pass
+db:
+  image: cgironalas/tetris_db:latest
+  restart: always
+  ports:
+    - "5555:5432"
 
 api:
   image: cgironalas/tetris_api:latest
