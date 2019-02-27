@@ -8,7 +8,12 @@ POSTGRES_DB = "tetris"
 
 app = Flask(__name__, instance_relative_config=True)
 
-DB_URL = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'.format(user=POSTGRES_USER,pw=POSTGRES_PW,url=POSTGRES_URL,db=POSTGRES_DB)
+DB_URL = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'.format(
+    user = POSTGRES_USER,
+    pw = POSTGRES_PW,
+    url = POSTGRES_URL,
+    db = POSTGRES_DB
+)
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -16,8 +21,8 @@ db = SQLAlchemy(app)
 
 class Leaderboard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=False, nullable=False)
     score = db.Column(db.Integer, unique=False, nullable=False)
+    name = db.Column(db.String(50), unique=False, nullable=False)
 
     def __repr__(self):
         return '%s,%s' % (self.name, self.score)
@@ -47,9 +52,12 @@ def register(name, score):
 
 @app.route('/leaderboard', methods=('GET', 'POST'))
 def leaderboard():
-    posts = Leaderboard.query.limit(10).all()
-    print(posts)
-    posts_string = ';'.join('{},{}'.format(ranker.name, ranker.score) for ranker in posts)
+    posts = Leaderboard.query.order_by(
+        Leaderboard.score.desc()).limit(10).all()
+
+    posts_string = ';'.join(
+        '{},{}'.format(ranker.name, ranker.score) for ranker in posts
+    )
     return posts_string
 
 @app.route('/')
