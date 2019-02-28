@@ -52,7 +52,7 @@ class Game extends React.Component {
 
   // Fetch the leaderboard from the API
   update_leaderboard() {
-    axios.get('http://localhost:5000/leaderboard')
+    axios.get('http://0.0.0.0:5000/leaderboard')
       .then(res => {
         // Get the data and format it as a list of objects with name and score.
         const rankings = res.data.split(';').map((value, index) => {
@@ -602,7 +602,7 @@ class Game extends React.Component {
 
   submit_score = (event) => {
     this.setState({ submitted: true });
-    let link = 'http://localhost:5000/' + this.state.name + '/' + this.state.score + '/register';
+    let link = 'http://0.0.0.0:5000/' + this.state.name + '/' + this.state.score + '/register';
     console.log(link);
     axios.get(link)
       .then(res => {

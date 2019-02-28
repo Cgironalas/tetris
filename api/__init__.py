@@ -1,9 +1,11 @@
-from flask import Flask, request
+import math
+
+from flask import Flask, request, flash
 from flask_sqlalchemy import SQLAlchemy
 
 POSTGRES_USER = "tetris_user"
 POSTGRES_PW = "tetris_pass"
-POSTGRES_URL = "0.0.0.0:5555"
+POSTGRES_URL = "db:5432"
 POSTGRES_DB = "tetris"
 
 app = Flask(__name__, instance_relative_config=True)
@@ -35,10 +37,11 @@ def apply_cors(response):
 @app.route('/<string:name>/<int:score>/register', methods=('GET', 'POST'))
 def register(name, score):
     error = None
+    score = int(score)
 
     if not name:
         error = 'A name should be sent.'
-    elif not score:
+    elif math.isnan(score):
         error = 'A score should be sent.'
 
     if error is None:
