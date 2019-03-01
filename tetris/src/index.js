@@ -17,7 +17,7 @@ class Game extends React.Component {
       leaderboard: [],
 
       // In Board components
-      board: Array(22).fill(
+      board: Array(23).fill(
         Array(10).fill(0)
       ),
       moving_piece: {
@@ -430,11 +430,11 @@ class Game extends React.Component {
       clearInterval(this.interval);
       this.interval = setInterval(() => {
         let counter = this.state.counter;
-        counter++;
+        counter += this.state.timer;
         if (!this.state.finished_game && !this.state.paused) {
           this.move_piece('down');
         }
-        if (counter === 30) {
+        if (counter >= 30000) {
           this.setState({ counter: 0 });
           this.update_leaderboard();
         }
@@ -632,15 +632,43 @@ class Game extends React.Component {
 /* End piece movement */
 
 /* Pice rotation */
+  check_new_coords = (coords) => {
+    let good, x, y
+    let x_sum = 0
+    let y_sum = 0
+    do {
+      good = true
+      for ([x, y] of coords) {
+        x = x + x_sum
+        y = y + y_sum
+        x_sum = 0
+        y_sum = 0
+        if (x < 0) {
+          good = false
+          y_sum = Math.max(y_sum, 0)
+          x_sum = Math.abs(x_sum, x)
+          break
+        }
+        if (x > 9) {
+          good = false
+          y_sum = 0
+          x_sum = 0 - x + 9
+        }
+        if (y < 0) {
+          good = false
+          y_sum = Math.max(y_sum, Math.abs(y))
+        }
+      }
+    } while (!good);
+    let checked_coords = coords
+    return checked_coords
+  }
   get_next_rotation = (piece, rotation) => {
     let new_coords = []
 
     let old_coords = piece.coords
-    console.log(old_coords)
     let rotation_index = piece.rotation
-    console.log('rotation index: ' + rotation_index)
     let rotation_math = piece.rotations[(rotation_index + rotation) % 4]
-    console.log(rotation_math)
 
     for (let i = 0; i < 4; i++) {
       let x, x_sum, y, y_sum
@@ -652,9 +680,11 @@ class Game extends React.Component {
 
       new_coords.push([x + x_sum, y + y_sum])
     }
-    console.log(new_coords)
+
+    let checked_coords = this.check_new_coords(new_coords);
+    console.log(checked_coords)
     console.log('\n')
-    return new_coords;
+    return checked_coords;
   }
 
   rotate_piece = (rotation) => {
