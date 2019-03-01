@@ -24,6 +24,8 @@ class Game extends React.Component {
         color: 2,
         type: 'i',
         coords: [[5, 10],[6,10],[7,10],[8,10]],
+        rotation: 0,
+        rotations: [],
       },
 
       // Timer Interval
@@ -152,6 +154,8 @@ class Game extends React.Component {
         return {
           color: 1,
           type: 'o',
+          rotation: 0,
+          rotations: [[0,0]],
           coords: [[4,21],[5,21],[4,20],[5,20]],
         }
 
@@ -159,6 +163,21 @@ class Game extends React.Component {
         return {
           color: 2,
           type: 'i',
+          rotation: 0,
+          rotations: [
+            [
+              [-1, 2], [0, 1], [1, 0], [2, -1]
+            ],
+            [
+              [2, 1], [1, 0], [0, -1], [-1, -2]
+            ],
+            [
+              [1, -2], [0, -1], [-1, 0], [-2, 1]
+            ],
+            [
+              [-2, -1], [-1, 0], [0, 1], [1, 2]
+            ]
+          ],
           coords: [[3,20],[4,20],[5,20],[6,20]],
         }
 
@@ -166,6 +185,21 @@ class Game extends React.Component {
         return {
           color: 3,
           type: 't',
+          rotation: 0,
+          rotations: [
+            [
+              [1, 1], [-1, 1], [0, 0], [1, -1]
+            ],
+            [
+              [1, -1], [1, 1], [0, 0], [-1, -1]
+            ],
+            [
+              [-1, -1], [1, -1], [0, 0], [-1, 1]
+            ],
+            [
+              [-1, 1], [-1, -1], [0, 0], [1, 1]
+            ]
+          ],
           coords: [[4,21],[3,20],[4,20],[5,20]],
         }
 
@@ -173,6 +207,21 @@ class Game extends React.Component {
         return {
           color: 4,
           type: 'l',
+          rotation: 0,
+          rotations: [
+            [
+              [2, 0], [-1, 1], [0, 0], [1, -1]
+            ],
+            [
+              [0, -2], [1, 1], [0, 0], [-1, -1]
+            ],
+            [
+              [-2, 0], [1, -1], [0, 0], [-1, 1]
+            ],
+            [
+              [0, 2], [-1, -1], [0, 0], [1, 1]
+            ]
+          ],
           coords: [[5,21],[3,20],[4,20],[5,20]],
         }
 
@@ -180,6 +229,21 @@ class Game extends React.Component {
         return {
           color: 5,
           type: 'j',
+          rotation: 0,
+          rotations: [
+            [
+              [0, 2], [-1, 1], [0, 0], [1, -1]
+            ],
+            [
+              [2, 0], [1, 1], [0, 0], [-1, -1]
+            ],
+            [
+              [0, -2], [1, -1], [0, 0], [-1, 1]
+            ],
+            [
+              [-2, 0], [-1, -1], [0, 0], [1, 1]
+            ]
+          ],
           coords: [[3,21],[3,20],[4,20],[5,20]],
         }
 
@@ -187,6 +251,21 @@ class Game extends React.Component {
         return {
           color: 6,
           type: 's',
+          rotation: 0,
+          rotations: [
+            [
+              [1, 1], [2, 0], [-1, 1], [0, 0]
+            ],
+            [
+              [1, -1], [0, -2], [1, 1], [0, 0]
+            ],
+            [
+              [-1, -1], [-2, 0], [1, -1], [0, 0]
+            ],
+            [
+              [-1, 1], [0, 2], [-1, -1], [0, 0]
+            ]
+          ],
           coords: [[4,21],[5,21],[3,20],[4,20]],
         }
 
@@ -194,11 +273,26 @@ class Game extends React.Component {
         return {
           color: 7,
           type: 'z',
+          rotation: 0,
+          rotations: [
+            [
+              [0, 2], [1, 1], [0, 0], [1, -1]
+            ],
+            [
+              [2, 0], [1, -1], [0, 0], [-1, -1]
+            ],
+            [
+              [0, -2], [-1, -1], [0, 0], [-1, 1]
+            ],
+            [
+              [-2, 0], [-1, 1], [0, 0], [1, 1]
+            ]
+          ],
           coords: [[3,21],[4,21],[4,20],[5,20]],
         }
 
       default://random piece
-        let next_piece = this.generate_next_piece_type();
+        let next_piece = 'i'//this.generate_next_piece_type();
         return this.get_piece(next_piece);
     }
   }
@@ -215,6 +309,8 @@ class Game extends React.Component {
         type: new_piece.type,
         color: new_piece.color,
         coords: new_piece.coords,
+        rotation: new_piece.rotation,
+        rotations: new_piece.rotations,
       },
       hold_blocked: false,
     });
@@ -282,6 +378,8 @@ class Game extends React.Component {
         type: moving_piece.type,
         color: moving_piece.color,
         coords: moving_piece.coords,
+        rotation: moving_piece.rotation,
+        rotations: moving_piece.rotations,
       }
     });
     this.forceUpdate();
@@ -321,7 +419,7 @@ class Game extends React.Component {
       let new_score = this.get_score(completed_rows);
       //console.log('new score: ' + new_score);
 
-      let new_timer = this.state.timer - (completed_rows * 10);
+      let new_timer = Math.max(this.state.timer - (completed_rows * 200), 300);
 
       this.setState({
         score: new_score,
@@ -329,6 +427,21 @@ class Game extends React.Component {
         timer: new_timer,
       });
       this.forceUpdate();
+      clearInterval(this.interval);
+      this.interval = setInterval(() => {
+        let counter = this.state.counter;
+        counter++;
+        if (!this.state.finished_game && !this.state.paused) {
+          this.move_piece('down');
+        }
+        if (counter === 30) {
+          this.setState({ counter: 0 });
+          this.update_leaderboard();
+        }
+        else {
+          this.setState({ counter: counter });
+        }
+      }, this.state.timer)
     }
   }
 
@@ -361,6 +474,8 @@ class Game extends React.Component {
           color: piece.color,
           type: piece.type,
           coords: piece.coords,
+          rotation: piece.rotation,
+          rotations: piece.rotations,
         }
       });
       this.forceUpdate();
@@ -385,6 +500,8 @@ class Game extends React.Component {
     let type = this.state.moving_piece.type;
     let color = this.state.moving_piece.color;
     let coords = this.state.moving_piece.coords;
+    let rotation = this.state.moving_piece.rotation
+    let rotations = this.state.moving_piece.rotations
     let coords_obj = this.get_coords_object(this.state.moving_piece);
     let min_height = 21;
     let counter = 99;
@@ -498,8 +615,9 @@ class Game extends React.Component {
       //this.console_board();
     }
     else {
-      console.log({color: color, type: type, coords: new_coords});
-      this.update_board({color: color, type: type, coords: new_coords}, to_white, to_color);
+      //console.log({color: color, type: type, coords: new_coords});
+      this.update_board({color: color, type: type, coords: new_coords,
+        rotation: rotation, rotations: rotations}, to_white, to_color);
     }
     if (finished_game) {
       this.setState({ finished_game: true });
@@ -511,7 +629,59 @@ class Game extends React.Component {
     this.setState({ paused: false });
     this.forceUpdate();
   }
+/* End piece movement */
 
+/* Pice rotation */
+  get_next_rotation = (piece, rotation) => {
+    let new_coords = []
+
+    let old_coords = piece.coords
+    console.log(old_coords)
+    let rotation_index = piece.rotation
+    console.log('rotation index: ' + rotation_index)
+    let rotation_math = piece.rotations[(rotation_index + rotation) % 4]
+    console.log(rotation_math)
+
+    for (let i = 0; i < 4; i++) {
+      let x, x_sum, y, y_sum
+
+      x = old_coords[i][0]
+      x_sum = rotation_math[i][0]
+      y = old_coords[i][1]
+      y_sum = rotation_math[i][1]
+
+      new_coords.push([x + x_sum, y + y_sum])
+    }
+    console.log(new_coords)
+    console.log('\n')
+    return new_coords;
+  }
+
+  rotate_piece = (rotation) => {
+    let piece = this.state.moving_piece
+
+    if (piece.type === 'o') {
+      return
+    }
+    else {
+      let new_coords = this.get_next_rotation(piece, rotation)
+      let new_piece = {
+        color: piece.color,
+        type: piece.type,
+        rotation: piece.rotation + rotation,
+        rotations: piece.rotations,
+        coords: new_coords,
+      }
+      this.erase_piece(piece)
+      this.paint_piece(new_piece)
+      this.setState({
+        moving_piece: new_piece
+      })
+    }
+  }
+/* End piece rotation */
+
+/* Key press handling */
   handleKeyPress = (event) => {
     if (!this.state.finished_game) {
       //console.log("key pressed: ");
@@ -520,12 +690,12 @@ class Game extends React.Component {
     /* Rotations */
       if (event.keyCode === 82 || event.keyCode === 32) {
         //console.log('ROTATE RIGHT');
-        this.remove_pause();
+        this.rotate_piece(1);
         return;
       }
       if (event.keyCode === 88) {
         //console.log('ROTATE LEFT');
-        this.remove_pause();
+        this.rotate_piece(-1);
         return;
       }
     /* End Rotations */
@@ -580,20 +750,22 @@ class Game extends React.Component {
     /* End Pause */
     }
   }
-/* End piece movement */
+/* End key press handling */
 
 /* Button handlers */
   game_start = (event) => {
     let piece, next_piece;
     next_piece = this.generate_next_piece_type();
     piece = this.get_piece();
-
+    console.log(piece)
     this.setState({
       next_piece: next_piece,
       moving_piece: {
         color: piece.color,
         type: piece.type,
         coords: piece.coords,
+        rotation: piece.rotation,
+        rotations: piece.rotations,
       },
       paused: false,
     });
@@ -609,6 +781,7 @@ class Game extends React.Component {
         // Get the data and format it as a list of objects with name and score.
         const data = res.data;
         console.log(data);
+        let piece = this.get_piece()
         this.setState({
           score: 0,
           next_piece: ' ',
@@ -621,9 +794,11 @@ class Game extends React.Component {
             Array(10).fill(0)
           ),
           moving_piece: {
-            color: 2,
-            type: 'i',
-            coords: [[5, 10],[6,10],[7,10],[8,10]],
+            color: piece.color,
+            type: piece.type,
+            coords: piece.coords,
+            rotation: piece.rotation,
+            rotations: piece.rotations,
           },
 
           // Timer Interval
@@ -721,4 +896,3 @@ ReactDOM.render(
   <Game />,
   document.getElementById('root')
 );
-
