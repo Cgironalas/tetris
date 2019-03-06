@@ -25,16 +25,14 @@ class Game extends React.Component {
   state = {
     // Side Data
     score: 0,
-    next_piece: ' ',
-    hold_piece: ' ',
-    hold_blocked: false,
+    nextPiece: ' ',
+    holdPiece: ' ',
+    holdBlocked: false,
     leaderboard: [],
 
     // In Board components
-    board: Array(BOARD_HEIGHT).fill(
-      Array(BOARD_WIDTH).fill(0)
-    ),
-    moving_piece: {
+    board: Array(BOARD_HEIGHT).fill(null).map(_ => Array(BOARD_WIDTH).fill(0)),
+    movingPiece: {
       color: 0,
       type: ' ',
       coords: [],
@@ -49,24 +47,24 @@ class Game extends React.Component {
     // General Game State
     paused: true,
     submitted: false,
-    finished_game: false,
+    finishedGame: false,
   }
 
   // Print the game board on console.
-  console_board = (board = this.state.board) => {
+  consoleBoard = (board = this.state.board) => {
     let output = "";
     for (let row of board) {
-      const row_string = row.join(' - ');
-      output = row_string + '\n' + output;
+      const rowString = row.join(' - ');
+      output = rowString + '\n' + output;
     }
     console.log(output);
   }
 
 /* For automatic component updates */
-  // update_leaderboard, componentDidMount and componentWillUnmount
+  // updateLeaderboard, componentDidMount and componentWillUnmount
 
   // Fetch the leaderboard from the API
-  update_leaderboard = () => {
+  updateLeaderboard = () => {
     axios.get('http://0.0.0.0:5000/leaderboard')
       .then(res => {
         // Get the data and format it as a list of objects with name and score.
@@ -81,48 +79,48 @@ class Game extends React.Component {
   // REFACTOR TO FUNCTION?
   componentDidMount() {
     this.downInterval = setInterval(() => {
-      if (!this.state.finished_game && !this.state.paused) {
-        this.move_piece('down');
+      if (!this.state.finishedGame && !this.state.paused) {
+        this.movePiece('down');
       }
     }, this.state.timer)
 
-    this.updateLeaderboard = setInterval(() => {
-      this.update_leaderboard()
+    this.updateLeaderboardInterval = setInterval(() => {
+      this.updateLeaderboard()
     }, 30000)
   }
 
   componentWillUnmount() {
     clearInterval(this.downInterval)
-    clearInterval(this.updateLeaderboard)
+    clearInterval(this.updateLeaderboardInterval)
   }
 /* End for automatic component updates*/
 
 /* Score related functions */
-  // get_multiplier and get_score
+  // getMultiplier and getScore
   // Get the score multiplier to use based on completed rows in a turn.
-  get_multiplier = (rows_completed) => (
-    MULTIPLIERS.hasOwnProperty(rows_completed) ? MULTIPLIERS[rows_completed] : 0
+  getMultiplier = (rowsCompleted) => (
+    MULTIPLIERS.hasOwnProperty(rowsCompleted) ? MULTIPLIERS[rowsCompleted] : 0
   )
 
   // Get the new score based on completed rows in a turn.
-  get_score = (rows_completed) => {
-    if (rows_completed <= 0) {
+  getScore = (rowsCompleted) => {
+    if (rowsCompleted <= 0) {
       return this.state.score
     }
     else {
-      const multiplier = this.get_multiplier(rows_completed)
-      return this.state.score + ((rows_completed * SCORE_PER_ROW) * multiplier)
+      const multiplier = this.getMultiplier(rowsCompleted)
+      return this.state.score + ((rowsCompleted * SCORE_PER_ROW) * multiplier)
     }
   }
 /* End score related functions */
 
 /* Piece generation and data functions*/
-  // get_coords_object, generate_next_piece_type
-  // get_piece and get_new_piece
+  // getCoordsObject, generateNextPieceType
+  // getPiece and getNewPiece
 
   // Will return an object with the piece coords where the keys will be
   // [x, y] as a string and the values all 0s.
-  get_coords_object = (piece) => {
+  getCoordsObject = (piece) => {
     let obj = {};
     for (let coords of piece.coords) {
       obj[coords] = 0;
@@ -131,24 +129,24 @@ class Game extends React.Component {
   }
 
   // Will return the string character to be used for the next piece.
-  generate_next_piece_type = () => {
-    // piece_types is hard coded since those are the standard piece types for
+  generateNextPieceType = () => {
+    // pieceTypes is hard coded since those are the standard piece types for
     // the tetris game.
-    let piece_types = ['o','i','t','l','j','s','z'];
-    let current_type_index = piece_types.indexOf(this.state.moving_piece.type);
-    if (current_type_index > -1) {
-      piece_types.splice(current_type_index, 1);
+    let pieceTypes = ['o','i','t','l','j','s','z'];
+    let currentTypeIndex = pieceTypes.indexOf(this.state.movingPiece.type);
+    if (currentTypeIndex > -1) {
+      pieceTypes.splice(currentTypeIndex, 1);
     }
 
-    let next_piece_type =
-      piece_types[Math.floor(Math.random()*piece_types.length)];
-    return next_piece_type;
+    let nextPieceType =
+      pieceTypes[Math.floor(Math.random()*pieceTypes.length)];
+    return nextPieceType;
   }
 
   // Default settings to create any new piece.
   // if a type is given that piece will be created
   // else it will create a random piece
-  get_piece = (type = '') => {
+  getPiece = (type = '') => {
     switch(type) {
       case 'o':
         return {
@@ -292,78 +290,77 @@ class Game extends React.Component {
         }
 
       default://random piece
-        let next_piece = 'i'//this.generate_next_piece_type();
-        return this.get_piece(next_piece);
+        let nextPiece = 'i'//this.generateNextPieceType();
+        return this.getPiece(nextPiece);
     }
   }
 
-  // Will create a new piece based on the type in next_piece and randomly
-  // generate a new next_piece type that won't be a repeat of the last one.
-  get_new_piece = (type = '') => {
-    const new_piece = this.get_piece(this.state.next_piece);
+  // Will create a new piece based on the type in nextPiece and randomly
+  // generate a new nextPiece type that won't be a repeat of the last one.
+  getNewPiece = (type = '') => {
+    const newPiece = this.getPiece(this.state.nextPiece);
 
     this.setState({
-      next_piece: this.generate_next_piece_type(),
-      moving_piece: { ...new_piece },
-      hold_blocked: false,
+      nextPiece: this.generateNextPieceType(),
+      movingPiece: { ...newPiece },
+      holdBlocked: false,
     });
   }
 /* End piece generation */
 
 /* Board repainting */
-  // erase_piece, paint_piece, update_board, check_finished_rows
+  // erasePiece, paintPiece, updateBoard, checkFinishedRows
   //NOT IMPLEMENTED
-  erase_piece = (piece, board = this.state.board) => {
-    let new_board = board.slice();
+  erasePiece = (piece, board = this.state.board) => {
+    let newBoard = board.slice()
     for (let [x, y] of piece.coords) {
-      new_board[y][x] = 0;
+      newBoard[y][x] = 0
     }
-    return new_board;
+    return newBoard;
   }
-  //NOT IMPLEMENTED
-  paint_piece = (piece, board = this.state.board) => {
-    let color = piece.color;
-    let new_board = board.slice();
-    for (let [x, y] of piece.coords) {
-      new_board[y][x] = color;
+  paintPiece = (piece, board = this.state.board) => {
+    const {color, coords} = piece
+    let newBoard = board.slice()
+    for (const [x, y] of coords) {
+      newBoard[y][x] = color
     }
-    return new_board;
+    return newBoard
   }
 
   // Erases old piece, paints the new one and re-renders
-  update_board = (moving_piece, to_white, to_color) => {
-    //let new_board;
-    //new_board = erase_piece(old_piece);
-    //new_board = paint_piece(new_piece, new_board);
-    let temp_coords;
-    let temp_row = [];
-    let new_board = [];
+  updateBoard = (movingPiece, toWhite, toColor) => {
+    //let newBoard;
+    //newBoard = erasePiece(oldPiece);
+    //newBoard = paintPiece(newPiece, newBoard);
+    let tempCoords;
+    let tempRow = [];
+    let newBoard = [];
 
     for(let y = 0; y < 23; y++) {
-      temp_row = [];
+      tempRow = [];
 
       for(let x = 0; x < 10; x++) {
-        temp_coords = [x, y];
+        tempCoords = [x, y];
 
-        if (to_color.hasOwnProperty(temp_coords)) {
-          temp_row.push(moving_piece.color);
+        if (toColor.hasOwnProperty(tempCoords)) {
+          tempRow.push(movingPiece.color);
         }
         else {
-          if (to_white.hasOwnProperty(temp_coords)) {
-            temp_row.push(0);
+          if (toWhite.hasOwnProperty(tempCoords)) {
+            tempRow.push(0);
           }
           else {
-            temp_row.push(this.state.board[y][x]);
+            tempRow.push(this.state.board[y][x]);
           }
         }
       }
 
-      new_board.push(temp_row);
+      newBoard.push(tempRow);
     }
 
     this.setState({
-      board: new_board,
-      moving_piece: { ...moving_piece },
+      board: newBoard,
+      movingPiece: { ...movingPiece },
     });
   }
 
@@ -373,70 +370,70 @@ class Game extends React.Component {
     accordingly and the board will be topped again.
     Forces re-render.
   */
-  check_finished_rows = () => {
+  checkFinishedRows = () => {
     //console.log('\nChecking finished rows...');
-    const new_board = this.state.board.filter((row) => (
+    const newBoard = this.state.board.filter((row) => (
       row.indexOf(0) > -1
     ));
 
-    const completed_rows = BOARD_HEIGHT - new_board.length
-    //console.log('lines completed: ' + completed_rows);
+    const completedRows = BOARD_HEIGHT - newBoard.length
+    //console.log('lines completed: ' + completedRows);
 
-    if (completed_rows > 0) {
+    if (completedRows > 0) {
       // Finish filling the board with 0s
-      const filled_board = this.state.board.reduce((board, row) => {
+      const filledBoard = this.state.board.reduce((board, row) => {
         if (row.indexOf(0) === -1) {
           return [...board, (Array(10).fill(0))]
         }
         return board
-      }, new_board)
+      }, newBoard)
 
 
       // Get the new score.
-      const new_score = this.get_score(completed_rows);
+      const newScore = this.getScore(completedRows);
 
-      const new_timer = Math.max(this.state.timer - (completed_rows * 20), 100);
+      const newTimer = Math.max(this.state.timer - (completedRows * 20), 100);
 
       this.setState({
-        score: new_score,
-        board: filled_board,
-        timer: new_timer,
+        score: newScore,
+        board: filledBoard,
+        timer: newTimer,
       })
       clearInterval(this.downInterval);
       this.downInterval = setInterval(() => {
-        if (!this.state.finished_game && !this.state.paused) {
-          this.move_piece('down');
+        if (!this.state.finishedGame && !this.state.paused) {
+          this.movePiece('down');
         }
       }, this.state.timer)
     }
   }
 
-  hold_piece = () => {
-    if (this.state.hold_blocked === false) {
-      let current_hold = this.state.hold_piece;
-      let old_piece = this.state.moving_piece;
-      let type = this.state.moving_piece.type;
-      let piece, next_piece;
+  holdPiece = () => {
+    if (this.state.holdBlocked === false) {
+      let currentHold = this.state.holdPiece;
+      let oldPiece = this.state.movingPiece;
+      let type = this.state.movingPiece.type;
+      let piece, nextPiece;
 
-      let board = this.erase_piece(old_piece);
+      let board = this.erasePiece(oldPiece);
 
-      if (current_hold === ' ') {
+      if (currentHold === ' ') {
         //console.log('hold and create new');
-        piece = this.get_piece(this.state.next_piece);
+        piece = this.getPiece(this.state.nextPiece);
         //console.log(piece);
-        next_piece = this.generate_next_piece_type();
+        nextPiece = this.generateNextPieceType();
       }
       else {
         //console.log('hold and switch');
-        piece = this.get_piece(current_hold);
-        next_piece = this.state.next_piece;
+        piece = this.getPiece(currentHold);
+        nextPiece = this.state.nextPiece;
       }
       this.setState({
-        next_piece: next_piece,
-        hold_piece: type,
-        hold_blocked: true,
+        nextPiece: nextPiece,
+        holdPiece: type,
+        holdBlocked: true,
         board: board.slice(),
-        moving_piece: { ...piece },
+        movingPiece: { ...piece },
       });
     }
     else {
@@ -446,36 +443,140 @@ class Game extends React.Component {
 /* End board repainting */
 
 /* Piece movement */
-  // move_piece, remove_pause, handleKeyPress
+  // movePiece, removePause, handleKeyPress
 
-  move_piece = (direction) => {
-    let to_white = {};
-    let to_color = {};
-    let new_coords = [];
-    let generate_new = false;
-    let finished_game = false;
+  dropPiece = () => {
+    // It should idealy be changed, if not the drop command was wasted.
+    let counter = BOARD_HEIGHT
 
-    let type = this.state.moving_piece.type;
-    let color = this.state.moving_piece.color;
-    let coords = this.state.moving_piece.coords;
-    let rotation = this.state.moving_piece.rotation
-    let rotations = this.state.moving_piece.rotations
-    let coords_obj = this.get_coords_object(this.state.moving_piece);
-    let min_height = 21;
-    let counter = 99;
-    console.log(coords)
+    // Object used to make sure the piece does not consider its own blocks
+    // as possible stop locations.
+    const coordsObj = this.getCoordsObject(this.state.movingPiece)
+
+    // Filter coordinates to make sure they are not already at the base of the
+    // board
+    const movableCoords = this.state.movingPiece.coords.filter((item) => (
+      item[1] > 0
+    ))
+    if (movableCoords.length !== 4) {
+      return
+    }
+
+    // For all the blocks of the piece check how much each one can drop and keep
+    // the lowest value in the counter variable
+    for (let [x, y] of movableCoords) {
+      let counterAux = 0
+      for(let tempY = y - 1; tempY >= 0; tempY--) {
+        counterAux++
+        if (this.state.board[tempY][x] > 0 && !coordsObj.hasOwnProperty([x, tempY])) {
+          counter = Math.min(counterAux - 1, counter)
+        }
+        if (tempY === 0) {
+          counter = Math.min(counterAux, counter)
+        }
+      }
+    }
+    if (counter === BOARD_HEIGHT) {
+      return
+    }
+
+    // Get the new coords based on the counter from the last loop
+    const newCoords = this.state.movingPiece.coords.map(([x, y]) => (
+      [x, y-counter]
+    ))
+    const newPiece = { ...this.state.movingPiece, coords: newCoords }
+
+    this.erasePiece(this.state.movingPiece)
+    this.paintPiece(newPiece)
+    this.setState({ movingPiece: { ...newPiece } })
+  }
+
+  movePiece = (direction) => {
+  /*
+    let newCoords
+    const {coords} = this.state.movingPiece
+    const {board} = this.state
+
+    const coordsObj = this.getCoordsObject(this.state.movingPiece)
+
+    switch(direction) {
+      case 'left':
+        newCoords = coords.filter(([x, y]) => (
+          x > 0 && board[y][x--] !== undefined && board[y][x--] > 0 && !coordsObj.hasOwnProperty([x, y])
+        )).map(([x, y]) => (
+          [x-1, y]
+        ))
+        break
+      case 'right':
+        newCoords = coords.filter(([x, y]) => (
+          x < 9 && board[y][x++] !== undefined && board[y][x++] > 0 && !coordsObj.hasOwnProperty([x, y])
+        )).map(([x, y]) => (
+          [x+1, y]
+        ))
+        break
+      case 'down':
+        newCoords = coords.filter(([x, y]) => (
+          y > 0
+        )).map(([x, y]) => (
+          [x, y-1]
+        ))
+        console.log('new coords after map')
+        console.log(newCoords)
+
+        const finishCheck = newCoords.filter(([x, y]) => (
+          y > 20
+        ))
+        if (finishCheck.length) {
+          this.setState({ finishedGame: true })
+          alert('End match')
+          return
+        }
+
+        const canMove = newCoords.filter(([x, y]) => (
+          board[y][x] === 0 || !coordsObj.hasOwnProperty([x, y])
+        ))
+        if (canMove.length < 4) {
+          this.getNewPiece()
+          this.checkFinishedRows()
+          return
+        }
+        break
+      default:
+        return
+    }
+    if (newCoords.length < 4) {
+      return
+    }
+
+    this.consoleBoard()
+    const newPiece = { ...this.state.movingPiece, coords: newCoords }
+    console.log(newPiece)
+    const newBoard = this.erasePiece(this.state.movingPiece)
+    this.consoleBoard(newBoard)
+    const paintedBoard = this.paintPiece(newPiece, newBoard)
+    this.consoleBoard(paintedBoard)
+    this.setState({ movingPiece: { ...newPiece}, board: paintedBoard.slice() })
+  //*/
+  //*
+    let counter = BOARD_HEIGHT
+    let toWhite = {}
+    let toColor = {}
+    let newCoords = []
+    let generateNew = false
+    let finishedGame = false
+    let minHeight = BOARD_HEIGHT
+    const {type, color, coords, rotation, rotations} = this.state.movingPiece
+    const coordsObj = this.getCoordsObject(this.state.movingPiece)
+
     for (let [x, y] of coords) {
-      //x = pair[0];
-      //y = pair[1];
-
       switch(direction) {
         case 'left':
           if (x > 0) {
-            to_white[[x, y]] = 0;
-            x--;
-            to_color[[x, y]] = 0;
-            new_coords.push([x,y]);
-            if (this.state.board[y][x] > 0 && !coords_obj.hasOwnProperty([x, y])) {
+            toWhite[[x, y]] = 0;
+            x--
+            toColor[[x, y]] = 0;
+            newCoords.push([x,y]);
+            if (this.state.board[y][x] > 0 && !coordsObj.hasOwnProperty([x, y])) {
               return;
             }
           }
@@ -486,11 +587,11 @@ class Game extends React.Component {
 
         case 'right':
           if (x < 9) {
-            to_white[[x, y]] = 0;
+            toWhite[[x, y]] = 0;
             x++;
-            to_color[[x, y]] = 0;
-            new_coords.push([x,y]);
-            if (this.state.board[y][x] > 0 && !coords_obj.hasOwnProperty([x, y])) {
+            toColor[[x, y]] = 0;
+            newCoords.push([x,y]);
+            if (this.state.board[y][x] > 0 && !coordsObj.hasOwnProperty([x, y])) {
               return;
             }
           }
@@ -503,163 +604,164 @@ class Game extends React.Component {
           if (y <= 0) {
             return;
           }
-          min_height = Math.min(22, y);
-          let counter_aux = 0;
-          for(let aux = min_height - 1; aux >= 0; aux--) {
-            counter_aux++;
+          minHeight = Math.min(22, y);
+          let counterAux = 0;
+          for(let aux = minHeight - 1; aux >= 0; aux--) {
+            counterAux++;
             console.log({
               x: x,
               y: y,
               aux: aux,
               block: this.state.board[aux][x],
-              check: coords_obj.hasOwnProperty([x, aux])
+              check: coordsObj.hasOwnProperty([x, aux])
             });
-            if (this.state.board[aux][x] > 0 && !coords_obj.hasOwnProperty([x, aux])) {
-              console.log({height: aux, counter: counter_aux});
-              min_height = aux;
-              counter = Math.min(counter_aux - 1, counter);
+            if (this.state.board[aux][x] > 0 && !coordsObj.hasOwnProperty([x, aux])) {
+              console.log({height: aux, counter: counterAux});
+              minHeight = aux;
+              counter = Math.min(counterAux - 1, counter);
               console.log(counter);
             }
           }
           if (counter === 99) {
-            min_height = 0;
-            counter = Math.min(counter_aux - 1, counter);
+            minHeight = 0;
+            counter = Math.min(counterAux - 1, counter);
           }
 
 
-          to_white[[x, y]] = 0;
+          toWhite[[x, y]] = 0;
           break;
 
         default:
           if (y > 0) {
-            to_white[[x, y]] = 0;
+            toWhite[[x, y]] = 0;
             y--;
-            to_color[[x, y]] = 0;
-            new_coords.push([x,y]);
-            if (this.state.board[y][x] > 0 && !coords_obj.hasOwnProperty([x, y])) {
+            toColor[[x, y]] = 0;
+            newCoords.push([x,y]);
+            if (this.state.board[y][x] > 0 && !coordsObj.hasOwnProperty([x, y])) {
               if (y >= 19) {
-                finished_game = true;
+                finishedGame = true;
                 break;
               }
               else {
-                generate_new = true;
+                generateNew = true;
                 break;
               }
             }
           }
           else {
-            generate_new = true;
+            generateNew = true;
             break;
           }
           break;
       }
-      if (generate_new) {
+      if (generateNew) {
         break;
       }
     }
     if (direction === 'drop') {
       for(let [x, y] of coords) {
         y -= counter;
-        to_color[[x, y]] = 0;
-        new_coords.push([x,y]);
+        toColor[[x, y]] = 0;
+        newCoords.push([x,y]);
       }
     }
-    if (generate_new) {
-      this.get_new_piece();
-      this.check_finished_rows();
-      //this.console_board();
+    if (generateNew) {
+      this.getNewPiece();
+      this.checkFinishedRows();
+      //this.consoleBoard();
     }
     else {
-      //console.log({color: color, type: type, coords: new_coords});
-      this.update_board({color: color, type: type, coords: new_coords,
-        rotation: rotation, rotations: rotations}, to_white, to_color);
+      //console.log({color: color, type: type, coords: newCoords});
+      this.updateBoard({color: color, type: type, coords: newCoords,
+        rotation: rotation, rotations: rotations}, toWhite, toColor);
     }
-    if (finished_game) {
-      this.setState({ finished_game: true });
+    if (finishedGame) {
+      this.setState({ finishedGame: true });
       alert('End match');
     }
+  //*/
   }
 
-  remove_pause = () => {
+  removePause = () => {
     this.setState({ paused: false });
   }
 /* End piece movement */
 
 /* Pice rotation */
-  check_new_coords = (coords) => {
+  checkNewCoords = (coords) => {
     let good
-    let x_sum = 0
-    let y_sum = 0
+    let xSum = 0
+    let ySum = 0
     do {
       good = true
       for (let [x, y] of coords) {
-        x = x + x_sum
-        y = y + y_sum
-        x_sum = 0
-        y_sum = 0
+        x = x + xSum
+        y = y + ySum
+        xSum = 0
+        ySum = 0
         if (x < 0) {
           good = false
-          y_sum = Math.max(y_sum, 0)
-          x_sum = Math.abs(x_sum, x)
+          ySum = Math.max(ySum, 0)
+          xSum = Math.abs(xSum, x)
           break
         }
         if (x > 9) {
           good = false
-          y_sum = 0
-          x_sum = 0 - x + 9
+          ySum = 0
+          xSum = 0 - x + 9
         }
         if (y < 0) {
           good = false
-          y_sum = Math.max(y_sum, Math.abs(y))
+          ySum = Math.max(ySum, Math.abs(y))
         }
       }
     } while (!good);
-    let checked_coords = coords
-    return checked_coords
+    let checkedCoords = coords
+    return checkedCoords
   }
-  get_next_rotation = (piece, rotation) => {
-    let new_coords = []
+  getNextRotation = (piece, rotation) => {
+    let newCoords = []
 
-    let old_coords = piece.coords
-    let rotation_index = piece.rotation
-    let rotation_math = piece.rotations[(rotation_index + rotation) % 4]
+    let oldCoords = piece.coords
+    let rotationIndex = piece.rotation
+    let rotationMath = piece.rotations[(rotationIndex + rotation) % 4]
 
     for (let i = 0; i < 4; i++) {
-      let x, x_sum, y, y_sum
+      let x, xSum, y, ySum
 
-      x = old_coords[i][0]
-      x_sum = rotation_math[i][0]
-      y = old_coords[i][1]
-      y_sum = rotation_math[i][1]
+      x = oldCoords[i][0]
+      xSum = rotationMath[i][0]
+      y = oldCoords[i][1]
+      ySum = rotationMath[i][1]
 
-      new_coords.push([x + x_sum, y + y_sum])
+      newCoords.push([x + xSum, y + ySum])
     }
 
-    let checked_coords = this.check_new_coords(new_coords);
-    console.log(checked_coords)
+    let checkedCoords = this.checkNewCoords(newCoords);
+    console.log(checkedCoords)
     console.log('\n')
-    return checked_coords;
+    return checkedCoords;
   }
 
-  rotate_piece = (rotation) => {
-    let piece = this.state.moving_piece
+  rotatePiece = (rotation) => {
+    let piece = this.state.movingPiece
 
     if (piece.type === 'o') {
       return
     }
     else {
-      let new_coords = this.get_next_rotation(piece, rotation)
-      let new_piece = {
+      let newCoords = this.getNextRotation(piece, rotation)
+      let newPiece = {
         color: piece.color,
         type: piece.type,
         rotation: piece.rotation + rotation,
         rotations: piece.rotations,
-        coords: new_coords,
+        coords: newCoords,
       }
-      this.erase_piece(piece)
-      this.paint_piece(new_piece)
+      this.erasePiece(piece)
+      this.paintPiece(newPiece)
       this.setState({
-        moving_piece: { ...new_piece}
+        movingPiece: { ...newPiece}
       })
     }
   }
@@ -667,19 +769,19 @@ class Game extends React.Component {
 
 /* Key press handling */
   handleKeyPress = (event) => {
-    if (!this.state.finished_game) {
+    if (!this.state.finishedGame) {
       //console.log("key pressed: ");
       //console.log({charCode: event.charCode, key: event.key, keyCode: event.keyCode});
 
     /* Rotations */
       if (ROTATE_RIGHT.has(event.keyCode)) {
         //console.log('ROTATE RIGHT');
-        this.rotate_piece(1);
+        this.rotatePiece(1);
         return;
       }
       if (ROTATE_LEFT.has(event.keyCode)) {
         //console.log('ROTATE LEFT');
-        this.rotate_piece(-1);
+        this.rotatePiece(-1);
         return;
       }
     /* End Rotations */
@@ -688,29 +790,29 @@ class Game extends React.Component {
       // MOVE LEFT
       if (MOVE_LEFT.has(event.keyCode)) {
         //console.log('MOVE LEFT');
-        this.remove_pause();
-        this.move_piece('left');
+        this.removePause();
+        this.movePiece('left');
         return;
       }
       // MOVE RIGHT
       if (MOVE_RIGHT.has(event.keyCode)) {
         //console.log('MOVE RIGHT');
-        this.remove_pause();
-        this.move_piece('right');
+        this.removePause();
+        this.movePiece('right');
         return;
       }
       // MOVE DOWN
       if (MOVE_DOWN.has(event.keyCode)) {
         //console.log('MOVE DOWN');
-        this.remove_pause();
-        this.move_piece('bottom');
+        this.removePause();
+        this.movePiece('bottom');
         return;
       }
       // DROP
       if (DROP.has(event.keyCode)) {
         console.log('DROP');
-        this.remove_pause();
-        this.move_piece('drop');
+        this.removePause();
+        this.dropPiece();
         return;
       }
     /* End Movement */
@@ -718,8 +820,8 @@ class Game extends React.Component {
     /* Hold piece */
       if (HOLD.has(event.keyCode)) {
         //console.log('HOLD');
-        this.remove_pause();
-        this.hold_piece();
+        this.removePause();
+        this.holdPiece();
         return;
       }
     /* End Hold */
@@ -736,18 +838,19 @@ class Game extends React.Component {
 /* End key press handling */
 
 /* Button handlers */
-  game_start = (event) => {
-    this.update_leaderboard()
-    const piece = this.get_piece();
+  gameStart = (event) => {
+    this.updateLeaderboard()
+    const piece = this.getPiece()
     console.log(piece)
     this.setState({
-      next_piece: this.generate_next_piece_type(),
-      moving_piece: { ...piece },
+      nextPiece: this.generateNextPieceType(),
+      movingPiece: { ...piece },
       paused: false,
-    });
+    })
+    this.paintPiece(piece)
   }
 
-  submit_score = (event) => {
+  submitScore = (event) => {
     this.setState({ submitted: true });
     let link = 'http://0.0.0.0:5000/' + this.state.name + '/' + this.state.score + '/register';
     console.log(link);
@@ -756,19 +859,19 @@ class Game extends React.Component {
         // Get the data and format it as a list of objects with name and score.
         const data = res.data;
         console.log(data);
-        const piece = this.get_piece()
+        const piece = this.getPiece()
         this.setState({
           score: 0,
-          next_piece: ' ',
-          hold_piece: ' ',
-          hold_blocked: false,
+          nextPiece: ' ',
+          holdPiece: ' ',
+          holdBlocked: false,
           leaderboard: [],
 
           // In Board components
           board: Array(22).fill(
             Array(10).fill(0)
           ),
-          moving_piece: { ...piece },
+          movingPiece: { ...piece },
 
           // Timer Interval
           counter: 29,   // will reset and fetch leaderboard every 30s
@@ -777,16 +880,15 @@ class Game extends React.Component {
           // General Game State
           paused: true,
           submitted: false,
-          finished_game: false,
+          finishedGame: false,
         });
-        this.update_leaderboard();
+        this.updateLeaderboard();
       });
   }
 
-  capture_input = (event) => {
+  captureInput = (event) => {
     this.setState({ name: event.target.value });
   }
-
 /* End button handlers */
 
   render() {
@@ -795,7 +897,7 @@ class Game extends React.Component {
         <div className='pause'>
           {
             this.state.paused ?
-              this.state.next_piece === ' ' ?
+              this.state.nextPiece === ' ' ?
                 <h1>NEW GAME</h1>
               : <h1>GAME PAUSED</h1>
             : null
@@ -811,12 +913,12 @@ class Game extends React.Component {
           <div className='game-detail'>{this.state.score}</div>
 
           <div className='game-info'><b>Next Piece</b></div>
-          <div className='game-detail'>{this.state.next_piece}</div>
+          <div className='game-detail'>{this.state.nextPiece}</div>
 
           <div className='game-info'><b>Hold Piece</b></div>
           <div className='game-detail'>{
-            this.state.hold_piece === ' ' ?
-              'Not holding a piece' : this.state.hold_piece
+            this.state.holdPiece === ' ' ?
+              'Not holding a piece' : this.state.holdPiece
           }</div>
 
           <div className='game-info'><b>Leaderboard</b></div>
@@ -836,17 +938,17 @@ class Game extends React.Component {
             </tbody>
           </table>
           {
-            this.state.next_piece === ' ' ? <button className='game-info' type='button' onClick={this.game_start}>Start Game</button> : null
+            this.state.nextPiece === ' ' ? <button className='game-info' type='button' onClick={this.gameStart}>Start Game</button> : null
           }
           {
-            this.state.finished_game ?
+            this.state.finishedGame ?
               <div className='game-info'>
                 <input
                   className='game-detail'
                   type='text'
                   placeholder='Type your name here'
-                  onChange={this.capture_input} />
-                <button className='game-detail' type='button' disabled={this.state.submitted} onClick={this.submit_score}>
+                  onChange={this.captureInput} />
+                <button className='game-detail' type='button' disabled={this.state.submitted} onClick={this.submitScore}>
                   Submit Score
                 </button>
               </div>
