@@ -65,14 +65,10 @@ class Game extends React.Component {
 
   // Fetch the leaderboard from the API
   updateLeaderboard = () => {
-    axios.get('http://0.0.0.0:5000/leaderboard')
+    axios.get('http://0.0.0.0:5000/api/leaderboard')
       .then(res => {
-        // Get the data and format it as a list of objects with name and score.
-        const rankings = res.data.split(';').map((value) => {
-          const user = value.split(',')
-          return { name: user[0], score: user[1] }
-        })
-        this.setState({leaderboard: rankings})
+        // Get the data
+        this.setState({ leaderboard: res.data })
       })
   }
 
@@ -851,14 +847,21 @@ class Game extends React.Component {
   }
 
   submitScore = (event) => {
-    this.setState({ submitted: true });
-    let link = 'http://0.0.0.0:5000/' + this.state.name + '/' + this.state.score + '/register';
-    console.log(link);
-    axios.get(link)
+    this.setState({ submitted: true })
+    const link = 'http://0.0.0.0:5000/api/register'
+    const data = new FormData()
+    data.set('name', this.state.name)
+    data.set('score', this.state.score)
+    axios({
+      method: 'post',
+      url: link,
+      data: data,
+      config: { headers: { 'Content-Type': 'multipart/form-data' }},
+    })
       .then(res => {
         // Get the data and format it as a list of objects with name and score.
-        const data = res.data;
-        console.log(data);
+        const data = res.data
+        alert(data.message)
         const piece = this.getPiece()
         this.setState({
           score: 0,
@@ -868,9 +871,8 @@ class Game extends React.Component {
           leaderboard: [],
 
           // In Board components
-          board: Array(22).fill(
-            Array(10).fill(0)
-          ),
+          board: Array(BOARD_HEIGHT).fill(null).map(_ => Array(BOARD_WIDTH).fill(0)),
+
           movingPiece: { ...piece },
 
           // Timer Interval
@@ -881,9 +883,9 @@ class Game extends React.Component {
           paused: true,
           submitted: false,
           finishedGame: false,
-        });
-        this.updateLeaderboard();
-      });
+        })
+        this.updateLeaderboard()
+      })
   }
 
   captureInput = (event) => {
