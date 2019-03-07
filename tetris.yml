@@ -11,6 +11,8 @@ services:
   api:
     image: tetris_api:latest
     restart: always
+    volumes:
+      - ./api:/usr/api
     expose:
       - "5000"
     ports:
@@ -19,6 +21,8 @@ services:
   game:
     image: tetris_game:latest
     restart: always
+    volumes:
+      - ./tetris:/usr/src/tetris
     expose:
       - "3000"
     ports:

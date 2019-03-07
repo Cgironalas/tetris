@@ -2,7 +2,7 @@
 
 POSTGRES_USER = "tetris_user"
 POSTGRES_PW = "tetris_pass"
-POSTGRES_URL = "0.0.0.0:5432"
+POSTGRES_URL = "db:5432"
 POSTGRES_DB = "tetris"
 
 DB_URI = (
