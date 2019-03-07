@@ -1,67 +1,90 @@
-import math
+import datetime
 
-from flask import Flask, request, flash
 from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, request, jsonify, Blueprint
 
-POSTGRES_USER = "tetris_user"
-POSTGRES_PW = "tetris_pass"
-POSTGRES_URL = "db:5432"
-POSTGRES_DB = "tetris"
+from .config import DB_URI
+from .constants import ERROR_MESSAGE, SUCCESS_MESSAGE
 
-app = Flask(__name__, instance_relative_config=True)
-
-DB_URL = 'postgresql+psycopg2://{user}:{pw}@{url}/{db}'.format(
-    user = POSTGRES_USER,
-    pw = POSTGRES_PW,
-    url = POSTGRES_URL,
-    db = POSTGRES_DB
+app = Flask(__name__)
+app.config.update(
+    SQLALCHEMY_DATABASE_URI=DB_URI,
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
 )
-app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
+api_blueprint = Blueprint('api', __name__, url_prefix='/api')
+
 class Leaderboard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    score = db.Column(db.Integer, unique=False, nullable=False)
-    name = db.Column(db.String(50), unique=False, nullable=False)
+    name = db.Column(db.String(50), nullable=False)
+    score = db.Column(db.Integer, nullable=False)
+    date_time = db.Column(
+        db.TIMESTAMP,
+        nullable=False,
+        default=datetime.datetime.utcnow,
+    )
 
     def __repr__(self):
         return '%s,%s' % (self.name, self.score)
 
-@app.after_request
+@api_blueprint.after_request
 def apply_cors(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
 
-@app.route('/<string:name>/<int:score>/register', methods=('GET', 'POST'))
-def register(name, score):
-    error = None
-    score = int(score)
+@api_blueprint.route('/register', methods=('POST',))
+def register():
+    name = request.form.get('name')
+    score = request.form.get('score')
 
     if not name:
         error = 'A name should be sent.'
-    elif math.isnan(score):
+        return jsonify({'message': ERROR_MESSAGE, 'error': error}), 400
+
+    try:
+        score = int(float(score))
+    except (TypeError, ValueError):
         error = 'A score should be sent.'
+        return jsonify({'message': ERROR_MESSAGE, 'error': error}), 400
 
-    if error is None:
-        new_registry = Leaderboard(name=name, score=score)
-        db.session.add(new_registry)
-        db.session.commit()
-        return 'Added to Leaderboard'
+    new_registry = Leaderboard(name=name, score=score)
+    db.session.add(new_registry)
+    db.session.commit()
 
-    flash(error)
-    return 'There was an error with the request.'
+    post_response = {
+        'registry': {
+            'id': new_registry.id,
+            'name': new_registry.name,
+            'score': new_registry.score,
+            'date_time': new_registry.date_time,
+        },
+        'message': SUCCESS_MESSAGE,
+    }
+    return jsonify(post_response), 200
 
-@app.route('/leaderboard', methods=('GET', 'POST'))
+
+@api_blueprint.route('/leaderboard', methods=('GET',))
 def leaderboard():
     posts = Leaderboard.query.order_by(
         Leaderboard.score.desc()).limit(10).all()
 
-    posts_string = ';'.join(
-        '{},{}'.format(ranker.name, ranker.score) for ranker in posts
+    # the parens make the post_response a generator
+    posts_response = (
+        {
+            'id': ranker.id,
+            'name': ranker.name,
+            'score': ranker.score,
+            'date_time': ranker.date_time
+        }
+        for ranker in posts
     )
-    return posts_string
+    # by calling list(generator) python iterates through the generator and
+    # creates a list with its components
+    return jsonify(list(posts_response)), 200
+
+app.register_blueprint(api_blueprint)
 
 @app.route('/')
 def index():
