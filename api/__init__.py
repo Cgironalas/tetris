@@ -1,3 +1,8 @@
+'''This is the main file for the tetris API.
+
+It makes calls to the Postgres DB.
+'''
+
 import datetime
 
 from flask_sqlalchemy import SQLAlchemy
@@ -6,22 +11,25 @@ from flask import Flask, request, jsonify, Blueprint
 from .config import DB_URI
 from .constants import ERROR_MESSAGE, SUCCESS_MESSAGE
 
-app = Flask(__name__)
-app.config.update(
+APP = Flask(__name__)
+APP.config.update(
     SQLALCHEMY_DATABASE_URI=DB_URI,
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
 )
 
-db = SQLAlchemy(app)
+DB = SQLAlchemy(APP)
 
-api_blueprint = Blueprint('api', __name__, url_prefix='/api')
+API_BLUEPRINT = Blueprint('api', __name__, url_prefix='/api')
 
-class Leaderboard(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
-    score = db.Column(db.Integer, nullable=False)
-    date_time = db.Column(
-        db.TIMESTAMP,
+class Leaderboard(DB.Model):
+    '''SQLAlchemy Leaderboard table model for the API.'''
+    id = DB.Column(DB.Integer, primary_key=True) #pylint: disable=no-member
+    name = DB.Column(DB.String(50), nullable=False) #pylint: disable=no-member
+
+    score = DB.Column(DB.Integer, nullable=False) #pylint: disable=no-member
+
+    date_time = DB.Column( #pylint: disable=no-member
+        DB.TIMESTAMP, #pylint: disable=no-member
         nullable=False,
         default=datetime.datetime.utcnow,
     )
@@ -29,12 +37,12 @@ class Leaderboard(db.Model):
     def __repr__(self):
         return '%s,%s' % (self.name, self.score)
 
-@api_blueprint.after_request
+@API_BLUEPRINT.after_request
 def apply_cors(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
 
-@api_blueprint.route('/register', methods=('POST',))
+@API_BLUEPRINT.route('/register', methods=('POST',))
 def register():
     name = request.form.get('name')
     score = request.form.get('score')
@@ -50,8 +58,8 @@ def register():
         return jsonify({'message': ERROR_MESSAGE, 'error': error}), 400
 
     new_registry = Leaderboard(name=name, score=score)
-    db.session.add(new_registry)
-    db.session.commit()
+    DB.session.add(new_registry) #pylint: disable=no-member
+    DB.session.commit() #pylint: disable=no-member
 
     post_response = {
         'registry': {
@@ -65,7 +73,7 @@ def register():
     return jsonify(post_response), 200
 
 
-@api_blueprint.route('/leaderboard', methods=('GET',))
+@API_BLUEPRINT.route('/leaderboard', methods=('GET',))
 def leaderboard():
     posts = Leaderboard.query.order_by(
         Leaderboard.score.desc()).limit(10).all()
@@ -84,8 +92,8 @@ def leaderboard():
     # creates a list with its components
     return jsonify(list(posts_response)), 200
 
-app.register_blueprint(api_blueprint)
+APP.register_blueprint(API_BLUEPRINT)
 
-@app.route('/')
+@APP.route('/')
 def index():
     return 'Flask API Running'
