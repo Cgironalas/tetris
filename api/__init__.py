@@ -4,9 +4,10 @@ It makes calls to the Postgres DB.
 '''
 
 import datetime
+from typing import Tuple, Any
 
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask, request, jsonify, Blueprint
+from flask import Flask, request, jsonify, Blueprint, Response
 
 from .config import DB_URI
 from .constants import ERROR_MESSAGE, SUCCESS_MESSAGE
@@ -18,10 +19,9 @@ APP.config.update(
 )
 
 DB = SQLAlchemy(APP)
-
 API_BLUEPRINT = Blueprint('api', __name__, url_prefix='/api')
 
-class Leaderboard(DB.Model):
+class Leaderboard(DB.Model): #type:ignore
     '''SQLAlchemy Leaderboard table model for the API.'''
     id = DB.Column(DB.Integer, primary_key=True) #pylint: disable=no-member
     name = DB.Column(DB.String(50), nullable=False) #pylint: disable=no-member
@@ -34,18 +34,18 @@ class Leaderboard(DB.Model):
         default=datetime.datetime.utcnow,
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '%s,%s' % (self.name, self.score)
 
 @API_BLUEPRINT.after_request
-def apply_cors(response):
+def apply_cors(response: Response) -> Response:
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
 
 @API_BLUEPRINT.route('/register', methods=('POST',))
-def register():
+def register() -> Tuple[str, int]:
     name = request.form.get('name')
-    score = request.form.get('score')
+    score: Any = request.form.get('score')
 
     if not name:
         error = 'A name should be sent.'
@@ -74,7 +74,7 @@ def register():
 
 
 @API_BLUEPRINT.route('/leaderboard', methods=('GET',))
-def leaderboard():
+def leaderboard() -> Tuple[str, int]:
     posts = Leaderboard.query.order_by(
         Leaderboard.score.desc()).limit(10).all()
 
@@ -95,5 +95,5 @@ def leaderboard():
 APP.register_blueprint(API_BLUEPRINT)
 
 @APP.route('/')
-def index():
+def index() -> str:
     return 'Flask API Running'

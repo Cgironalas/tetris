@@ -35,3 +35,6 @@ api/htmlcov/
 api/dist/
 api/build/
 api/*.egg-info/
+
+# Mypy
+*.mypy_cache/
