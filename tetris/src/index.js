@@ -20,6 +20,9 @@ const DEFAULT_TIMER = 1000
 const SCORE_PER_ROW = 500
 const MULTIPLIERS = { 1: 1, 2: 1.25, 3: 1.5, 4: 2 }
 
+const PIECE_O = 'o'
+const PIECE_TYPES = [PIECE_O,'i','t','l','j','s','z']
+
 class Game extends React.Component {
   // Create the game board as a React Component.
   state = {
@@ -117,26 +120,23 @@ class Game extends React.Component {
   // Will return an object with the piece coords where the keys will be
   // [x, y] as a string and the values all 0s.
   getCoordsObject = (piece) => {
-    let obj = {};
-    for (let coords of piece.coords) {
-      obj[coords] = 0;
-    }
-    return obj;
+    const coordsSet = new Set(piece.coords.map(([x,y]) => (
+      String(x)+','+String(y)
+    )))
+    return coordsSet
   }
 
   // Will return the string character to be used for the next piece.
   generateNextPieceType = () => {
-    // pieceTypes is hard coded since those are the standard piece types for
-    // the tetris game.
-    let pieceTypes = ['o','i','t','l','j','s','z'];
-    let currentTypeIndex = pieceTypes.indexOf(this.state.movingPiece.type);
+    /*
+    let pieceTypes = [...PIECE_TYPES]
+    const currentTypeIndex = pieceTypes.indexOf(this.state.movingPiece.type)
     if (currentTypeIndex > -1) {
-      pieceTypes.splice(currentTypeIndex, 1);
+      pieceTypes.splice(currentTypeIndex, 1)
     }
+    */
 
-    let nextPieceType =
-      pieceTypes[Math.floor(Math.random()*pieceTypes.length)];
-    return nextPieceType;
+    return PIECE_TYPES[Math.floor(Math.random()*PIECE_TYPES.length)]
   }
 
   // Default settings to create any new piece.
@@ -286,8 +286,8 @@ class Game extends React.Component {
         }
 
       default://random piece
-        let nextPiece = 'i'//this.generateNextPieceType();
-        return this.getPiece(nextPiece);
+        const nextPiece = this.generateNextPieceType()
+        return this.getPiece(nextPiece)
     }
   }
 
@@ -300,7 +300,7 @@ class Game extends React.Component {
       nextPiece: this.generateNextPieceType(),
       movingPiece: { ...newPiece },
       holdBlocked: false,
-    });
+    })
   }
 /* End piece generation */
 
@@ -465,7 +465,7 @@ class Game extends React.Component {
       let counterAux = 0
       for(let tempY = y - 1; tempY >= 0; tempY--) {
         counterAux++
-        if (this.state.board[tempY][x] > 0 && !coordsObj.hasOwnProperty([x, tempY])) {
+        if (this.state.board[tempY][x] > 0 && !coordsObj.has(String([x, tempY]))) {
           counter = Math.min(counterAux - 1, counter)
         }
         if (tempY === 0) {
@@ -499,14 +499,14 @@ class Game extends React.Component {
     switch(direction) {
       case 'left':
         newCoords = coords.filter(([x, y]) => (
-          x > 0 && board[y][x--] !== undefined && board[y][x--] > 0 && !coordsObj.hasOwnProperty([x, y])
+          x > 0 && board[y][x--] !== undefined && board[y][x--] > 0 && !coordsObj.has(String([x, y]))
         )).map(([x, y]) => (
           [x-1, y]
         ))
         break
       case 'right':
         newCoords = coords.filter(([x, y]) => (
-          x < 9 && board[y][x++] !== undefined && board[y][x++] > 0 && !coordsObj.hasOwnProperty([x, y])
+          x < 9 && board[y][x++] !== undefined && board[y][x++] > 0 && !coordsObj.has(String([x, y]))
         )).map(([x, y]) => (
           [x+1, y]
         ))
@@ -530,7 +530,7 @@ class Game extends React.Component {
         }
 
         const canMove = newCoords.filter(([x, y]) => (
-          board[y][x] === 0 || !coordsObj.hasOwnProperty([x, y])
+          board[y][x] === 0 || !coordsObj.has(String([x, y]))
         ))
         if (canMove.length < 4) {
           this.getNewPiece()
@@ -573,7 +573,7 @@ class Game extends React.Component {
             x--
             toColor[[x, y]] = 0;
             newCoords.push([x,y]);
-            if (this.state.board[y][x] > 0 && !coordsObj.hasOwnProperty([x, y])) {
+            if (this.state.board[y][x] > 0 && !coordsObj.has(String([x, y]))) {
               return;
             }
           }
@@ -588,7 +588,7 @@ class Game extends React.Component {
             x++;
             toColor[[x, y]] = 0;
             newCoords.push([x,y]);
-            if (this.state.board[y][x] > 0 && !coordsObj.hasOwnProperty([x, y])) {
+            if (this.state.board[y][x] > 0 && !coordsObj.has(String([x, y]))) {
               return;
             }
           }
@@ -610,9 +610,9 @@ class Game extends React.Component {
               y: y,
               aux: aux,
               block: this.state.board[aux][x],
-              check: coordsObj.hasOwnProperty([x, aux])
+              check: coordsObj.has(String([x, aux]))
             });
-            if (this.state.board[aux][x] > 0 && !coordsObj.hasOwnProperty([x, aux])) {
+            if (this.state.board[aux][x] > 0 && !coordsObj.has(String([x, aux]))) {
               console.log({height: aux, counter: counterAux});
               minHeight = aux;
               counter = Math.min(counterAux - 1, counter);
@@ -634,7 +634,7 @@ class Game extends React.Component {
             y--;
             toColor[[x, y]] = 0;
             newCoords.push([x,y]);
-            if (this.state.board[y][x] > 0 && !coordsObj.hasOwnProperty([x, y])) {
+            if (this.state.board[y][x] > 0 && !coordsObj.has(String([x, y]))) {
               if (y >= 19) {
                 finishedGame = true;
                 break;
@@ -756,67 +756,67 @@ class Game extends React.Component {
 /* Key press handling */
   handleKeyPress = (event) => {
     if (!this.state.finishedGame) {
-      //console.log("key pressed: ");
-      //console.log({charCode: event.charCode, key: event.key, keyCode: event.keyCode});
+      //console.log("key pressed: ")
+      //console.log({charCode: event.charCode, key: event.key, keyCode: event.keyCode})
 
     /* Rotations */
       if (ROTATE_RIGHT.has(event.keyCode)) {
-        //console.log('ROTATE RIGHT');
-        this.rotatePiece(1);
-        return;
+        //console.log('ROTATE RIGHT')
+        this.rotatePiece(1)
+        return
       }
       if (ROTATE_LEFT.has(event.keyCode)) {
-        //console.log('ROTATE LEFT');
-        this.rotatePiece(-1);
-        return;
+        //console.log('ROTATE LEFT')
+        this.rotatePiece(-1)
+        return
       }
     /* End Rotations */
 
     /* Movement */
       // MOVE LEFT
       if (MOVE_LEFT.has(event.keyCode)) {
-        //console.log('MOVE LEFT');
-        this.removePause();
-        this.movePiece('left');
-        return;
+        //console.log('MOVE LEFT')
+        this.removePause()
+        this.movePiece('left')
+        return
       }
       // MOVE RIGHT
       if (MOVE_RIGHT.has(event.keyCode)) {
-        //console.log('MOVE RIGHT');
-        this.removePause();
-        this.movePiece('right');
-        return;
+        //console.log('MOVE RIGHT')
+        this.removePause()
+        this.movePiece('right')
+        return
       }
       // MOVE DOWN
       if (MOVE_DOWN.has(event.keyCode)) {
-        //console.log('MOVE DOWN');
-        this.removePause();
-        this.movePiece('bottom');
-        return;
+        //console.log('MOVE DOWN')
+        this.removePause()
+        this.movePiece('bottom')
+        return
       }
       // DROP
       if (DROP.has(event.keyCode)) {
-        console.log('DROP');
-        this.removePause();
-        this.dropPiece();
-        return;
+        console.log('DROP')
+        this.removePause()
+        this.dropPiece()
+        return
       }
     /* End Movement */
 
     /* Hold piece */
       if (HOLD.has(event.keyCode)) {
-        //console.log('HOLD');
-        this.removePause();
-        this.holdPiece();
-        return;
+        //console.log('HOLD')
+        this.removePause()
+        this.holdPiece()
+        return
       }
     /* End Hold */
 
     /* Pause */
       if (PAUSE.has(event.keyCode)) {
-        //console.log('pause');
-        this.setState(state => ({ paused: !state.paused }));
-        return;
+        //console.log('pause')
+        this.setState(state => ({ paused: !state.paused }))
+        return
       }
     /* End Pause */
     }
@@ -827,7 +827,6 @@ class Game extends React.Component {
   gameStart = (event) => {
     this.updateLeaderboard()
     const piece = this.getPiece()
-    console.log(piece)
     this.setState({
       nextPiece: this.generateNextPieceType(),
       movingPiece: { ...piece },
