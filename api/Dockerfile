@@ -2,9 +2,14 @@ FROM python:3.7-slim-stretch
 
 WORKDIR /usr/api
 
-COPY . .
+COPY *.py ./
+COPY pyproject.toml .
+COPY poetry.lock .
 
-RUN pip install Flask psycopg2-binary flask-sqlalchemy
+RUN pip install -U pip
+RUN pip install -U poetry
+RUN poetry config settings.virtualenvs.create false
+RUN poetry install --no-dev
 
 EXPOSE 5000
 
