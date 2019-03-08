@@ -423,7 +423,7 @@ class Game extends React.Component {
         nextPiece = this.state.nextPiece
       }
 
-      const board = this.paintedBoard(piece)
+      const board = this.paintPiece(piece, erasedBoard)
 
       this.setState({
         nextPiece: nextPiece,
