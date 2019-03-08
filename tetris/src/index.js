@@ -406,34 +406,35 @@ class Game extends React.Component {
 
   holdPiece = () => {
     if (this.state.holdBlocked === false) {
-      let currentHold = this.state.holdPiece;
-      let oldPiece = this.state.movingPiece;
-      let type = this.state.movingPiece.type;
+      const currentHold = this.state.holdPiece
+      const oldPiece = this.state.movingPiece
+      const type = this.state.movingPiece.type
+      const erasedBoard = this.erasePiece(oldPiece)
       let piece, nextPiece;
 
-      let board = this.erasePiece(oldPiece);
-
       if (currentHold === ' ') {
-        //console.log('hold and create new');
-        piece = this.getPiece(this.state.nextPiece);
-        //console.log(piece);
-        nextPiece = this.generateNextPieceType();
+        //console.log('hold and create new')
+        piece = this.getPiece(this.state.nextPiece)
+        nextPiece = this.generateNextPieceType()
       }
       else {
-        //console.log('hold and switch');
-        piece = this.getPiece(currentHold);
-        nextPiece = this.state.nextPiece;
+        //console.log('hold and switch')
+        piece = this.getPiece(currentHold)
+        nextPiece = this.state.nextPiece
       }
+
+      const board = this.paintedBoard(piece)
+
       this.setState({
         nextPiece: nextPiece,
         holdPiece: type,
         holdBlocked: true,
         board: board.slice(),
         movingPiece: { ...piece },
-      });
+      })
     }
     else {
-      console.log('you are already holding a piece');
+      console.log('you are already holding a piece')
     }
   }
 /* End board repainting */
@@ -715,49 +716,38 @@ class Game extends React.Component {
     let checkedCoords = coords
     return checkedCoords
   }
+
   getNextRotation = (piece, rotation) => {
-    let newCoords = []
+    const currentRotationIndex = piece.rotation
+    const rotationMath = piece.rotations[(currentRotationIndex + rotation) % 4]
 
-    let oldCoords = piece.coords
-    let rotationIndex = piece.rotation
-    let rotationMath = piece.rotations[(rotationIndex + rotation) % 4]
+    const rotatedCoords = piece.coords.map(([x, y], index) => {
+      const xSum = rotationMath[index][0]
+      const ySum = rotationMath[index][1]
+      return [x + xSum, y + ySum]
+    })
 
-    for (let i = 0; i < 4; i++) {
-      let x, xSum, y, ySum
-
-      x = oldCoords[i][0]
-      xSum = rotationMath[i][0]
-      y = oldCoords[i][1]
-      ySum = rotationMath[i][1]
-
-      newCoords.push([x + xSum, y + ySum])
-    }
-
-    let checkedCoords = this.checkNewCoords(newCoords);
-    console.log(checkedCoords)
-    console.log('\n')
-    return checkedCoords;
+    return this.checkNewCoords(rotatedCoords)
   }
 
   rotatePiece = (rotation) => {
-    let piece = this.state.movingPiece
+    const piece = this.state.movingPiece
 
     if (piece.type === 'o') {
       return
     }
     else {
-      let newCoords = this.getNextRotation(piece, rotation)
-      let newPiece = {
-        color: piece.color,
-        type: piece.type,
+      const newCoords = this.getNextRotation(piece, rotation)
+      const newPiece = {
+        ...piece,
         rotation: piece.rotation + rotation,
-        rotations: piece.rotations,
-        coords: newCoords,
+        coords: newCoords
       }
+
       this.erasePiece(piece)
       this.paintPiece(newPiece)
       this.setState({
-        movingPiece: { ...newPiece}
+        movingPiece: { ...newPiece }
       })
     }
   }
