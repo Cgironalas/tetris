@@ -1,27 +1,16 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import  axios from 'axios';
-import './index.css';
-import Board from './Board';
+import React from 'react'
+import ReactDOM from 'react-dom'
 
-const ROTATE_RIGHT = new Set([75, 38, 188, 87, 32])
-const ROTATE_LEFT = new Set([88])
-const MOVE_RIGHT = new Set([76, 39, 69, 68])
-const MOVE_LEFT = new Set([72, 37, 65])
-const MOVE_DOWN = new Set([74, 40, 79, 83])
-const PAUSE = new Set([76, 80])
-const HOLD = new Set([16])
-const DROP = new Set([13])
+import  axios from 'axios'
 
-const BOARD_HEIGHT = 23
-const BOARD_WIDTH = 10
-const DEFAULT_TIMER = 1000
-
-const SCORE_PER_ROW = 500
-const MULTIPLIERS = { 1: 1, 2: 1.25, 3: 1.5, 4: 2 }
-
-const PIECE_O = 'o'
-const PIECE_TYPES = [PIECE_O,'i','t','l','j','s','z']
+import './index.css'
+import Board from './Board'
+import Piece from './pieces'
+import getTurnPoints from './scoring'
+import {
+  BOARD_HEIGHT, BOARD_WIDTH, DEFAULT_TIMER, ROTATE_RIGHT, ROTATE_LEFT,
+  MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, DROP, HOLD, PAUSE, PIECE_O,
+} from './constants'
 
 class Game extends React.Component {
   // Create the game board as a React Component.
@@ -63,26 +52,25 @@ class Game extends React.Component {
     console.log(output);
   }
 
-/* For automatic component updates */
+/* For automatic component updates **/
   // updateLeaderboard, componentDidMount and componentWillUnmount
 
   // Fetch the leaderboard from the API
   updateLeaderboard = () => {
     axios.get('http://0.0.0.0:5000/api/leaderboard')
       .then(res => {
-        // Get the data
         this.setState({ leaderboard: res.data })
       })
   }
 
-  // REFACTOR TO FUNCTION?
   componentDidMount() {
     this.downInterval = setInterval(() => {
       if (!this.state.finishedGame && !this.state.paused) {
-        this.movePiece('down');
+        this.movePiece('down')
       }
     }, this.state.timer)
 
+    this.updateLeaderboard()
     this.updateLeaderboardInterval = setInterval(() => {
       this.updateLeaderboard()
     }, 30000)
@@ -94,210 +82,14 @@ class Game extends React.Component {
   }
 /* End for automatic component updates*/
 
-/* Score related functions */
-  // getMultiplier and getScore
-  // Get the score multiplier to use based on completed rows in a turn.
-  getMultiplier = (rowsCompleted) => (
-    MULTIPLIERS.hasOwnProperty(rowsCompleted) ? MULTIPLIERS[rowsCompleted] : 0
-  )
-
-  // Get the new score based on completed rows in a turn.
-  getScore = (rowsCompleted) => {
-    if (rowsCompleted <= 0) {
-      return this.state.score
-    }
-    else {
-      const multiplier = this.getMultiplier(rowsCompleted)
-      return this.state.score + ((rowsCompleted * SCORE_PER_ROW) * multiplier)
-    }
-  }
-/* End score related functions */
-
 /* Piece generation and data functions*/
-  // getCoordsObject, generateNextPieceType
-  // getPiece and getNewPiece
-
-  // Will return an object with the piece coords where the keys will be
-  // [x, y] as a string and the values all 0s.
-  getCoordsObject = (piece) => {
-    const coordsSet = new Set(piece.coords.map(([x,y]) => (
-      String(x)+','+String(y)
-    )))
-    return coordsSet
-  }
-
-  // Will return the string character to be used for the next piece.
-  generateNextPieceType = () => {
-    /*
-    let pieceTypes = [...PIECE_TYPES]
-    const currentTypeIndex = pieceTypes.indexOf(this.state.movingPiece.type)
-    if (currentTypeIndex > -1) {
-      pieceTypes.splice(currentTypeIndex, 1)
-    }
-    */
-
-    return PIECE_TYPES[Math.floor(Math.random()*PIECE_TYPES.length)]
-  }
-
-  // Default settings to create any new piece.
-  // if a type is given that piece will be created
-  // else it will create a random piece
-  getPiece = (type = '') => {
-    switch(type) {
-      case 'o':
-        return {
-          color: 1,
-          type: 'o',
-          rotation: 0,
-          rotations: [[0,0]],
-          coords: [[4,21],[5,21],[4,20],[5,20]],
-        }
-
-      case 'i':
-        return {
-          color: 2,
-          type: 'i',
-          rotation: 0,
-          rotations: [
-            [
-              [-1, 2], [0, 1], [1, 0], [2, -1]
-            ],
-            [
-              [2, 1], [1, 0], [0, -1], [-1, -2]
-            ],
-            [
-              [1, -2], [0, -1], [-1, 0], [-2, 1]
-            ],
-            [
-              [-2, -1], [-1, 0], [0, 1], [1, 2]
-            ]
-          ],
-          coords: [[3,20],[4,20],[5,20],[6,20]],
-        }
-
-      case 't':
-        return {
-          color: 3,
-          type: 't',
-          rotation: 0,
-          rotations: [
-            [
-              [1, 1], [-1, 1], [0, 0], [1, -1]
-            ],
-            [
-              [1, -1], [1, 1], [0, 0], [-1, -1]
-            ],
-            [
-              [-1, -1], [1, -1], [0, 0], [-1, 1]
-            ],
-            [
-              [-1, 1], [-1, -1], [0, 0], [1, 1]
-            ]
-          ],
-          coords: [[4,21],[3,20],[4,20],[5,20]],
-        }
-
-      case 'l':
-        return {
-          color: 4,
-          type: 'l',
-          rotation: 0,
-          rotations: [
-            [
-              [2, 0], [-1, 1], [0, 0], [1, -1]
-            ],
-            [
-              [0, -2], [1, 1], [0, 0], [-1, -1]
-            ],
-            [
-              [-2, 0], [1, -1], [0, 0], [-1, 1]
-            ],
-            [
-              [0, 2], [-1, -1], [0, 0], [1, 1]
-            ]
-          ],
-          coords: [[5,21],[3,20],[4,20],[5,20]],
-        }
-
-      case 'j':
-        return {
-          color: 5,
-          type: 'j',
-          rotation: 0,
-          rotations: [
-            [
-              [0, 2], [-1, 1], [0, 0], [1, -1]
-            ],
-            [
-              [2, 0], [1, 1], [0, 0], [-1, -1]
-            ],
-            [
-              [0, -2], [1, -1], [0, 0], [-1, 1]
-            ],
-            [
-              [-2, 0], [-1, -1], [0, 0], [1, 1]
-            ]
-          ],
-          coords: [[3,21],[3,20],[4,20],[5,20]],
-        }
-
-      case 's':
-        return {
-          color: 6,
-          type: 's',
-          rotation: 0,
-          rotations: [
-            [
-              [1, 1], [2, 0], [-1, 1], [0, 0]
-            ],
-            [
-              [1, -1], [0, -2], [1, 1], [0, 0]
-            ],
-            [
-              [-1, -1], [-2, 0], [1, -1], [0, 0]
-            ],
-            [
-              [-1, 1], [0, 2], [-1, -1], [0, 0]
-            ]
-          ],
-          coords: [[4,21],[5,21],[3,20],[4,20]],
-        }
-
-      case 'z':
-        return {
-          color: 7,
-          type: 'z',
-          rotation: 0,
-          rotations: [
-            [
-              [0, 2], [1, 1], [0, 0], [1, -1]
-            ],
-            [
-              [2, 0], [1, -1], [0, 0], [-1, -1]
-            ],
-            [
-              [0, -2], [-1, -1], [0, 0], [-1, 1]
-            ],
-            [
-              [-2, 0], [-1, 1], [0, 0], [1, 1]
-            ]
-          ],
-          coords: [[3,21],[4,21],[4,20],[5,20]],
-        }
-
-      default://random piece
-        const nextPiece = this.generateNextPieceType()
-        return this.getPiece(nextPiece)
-    }
-  }
-
   // Will create a new piece based on the type in nextPiece and randomly
   // generate a new nextPiece type that won't be a repeat of the last one.
   getNewPiece = (type = '') => {
-    const newPiece = this.getPiece(this.state.nextPiece);
+    const newPiece = Piece.getPiece(this.state.nextPiece);
 
     this.setState({
-      nextPiece: this.generateNextPieceType(),
+      nextPiece: Piece.generateNextPieceType(),
       movingPiece: { ...newPiece },
       holdBlocked: false,
     })
@@ -306,7 +98,6 @@ class Game extends React.Component {
 
 /* Board repainting */
   // erasePiece, paintPiece, updateBoard, checkFinishedRows
-  //NOT IMPLEMENTED
   erasePiece = (piece, board = this.state.board) => {
     let newBoard = board.slice()
     for (let [x, y] of piece.coords) {
@@ -386,7 +177,7 @@ class Game extends React.Component {
 
 
       // Get the new score.
-      const newScore = this.getScore(completedRows);
+      const newScore = this.state.score + getTurnPoints(completedRows);
 
       const newTimer = Math.max(this.state.timer - (completedRows * 20), 100);
 
@@ -414,12 +205,12 @@ class Game extends React.Component {
 
       if (currentHold === ' ') {
         //console.log('hold and create new')
-        piece = this.getPiece(this.state.nextPiece)
-        nextPiece = this.generateNextPieceType()
+        piece = Piece.getPiece(this.state.nextPiece)
+        nextPiece = Piece.generateNextPieceType()
       }
       else {
         //console.log('hold and switch')
-        piece = this.getPiece(currentHold)
+        piece = Piece.getPiece(currentHold)
         nextPiece = this.state.nextPiece
       }
 
@@ -440,7 +231,7 @@ class Game extends React.Component {
 /* End board repainting */
 
 /* Piece movement */
-  // movePiece, removePause, handleKeyPress
+  // dropPiece, movePiece, removePause
 
   dropPiece = () => {
     // It should idealy be changed, if not the drop command was wasted.
@@ -448,7 +239,7 @@ class Game extends React.Component {
 
     // Object used to make sure the piece does not consider its own blocks
     // as possible stop locations.
-    const coordsObj = this.getCoordsObject(this.state.movingPiece)
+    const coordsObj = Piece.getCoordsObject(this.state.movingPiece)
 
     // Filter coordinates to make sure they are not already at the base of the
     // board
@@ -494,7 +285,7 @@ class Game extends React.Component {
     const {coords} = this.state.movingPiece
     const {board} = this.state
 
-    const coordsObj = this.getCoordsObject(this.state.movingPiece)
+    const coordsObj = Piece.getCoordsObject(this.state.movingPiece)
 
     switch(direction) {
       case 'left':
@@ -555,15 +346,13 @@ class Game extends React.Component {
     this.setState({ movingPiece: { ...newPiece}, board: paintedBoard.slice() })
   //*/
   //*
-    let counter = BOARD_HEIGHT
     let toWhite = {}
     let toColor = {}
     let newCoords = []
     let generateNew = false
     let finishedGame = false
-    let minHeight = BOARD_HEIGHT
     const {type, color, coords, rotation, rotations} = this.state.movingPiece
-    const coordsObj = this.getCoordsObject(this.state.movingPiece)
+    const coordsObj = Piece.getCoordsObject(this.state.movingPiece)
 
     for (let [x, y] of coords) {
       switch(direction) {
@@ -597,37 +386,6 @@ class Game extends React.Component {
           }
           break;
 
-        case 'drop':
-          if (y <= 0) {
-            return;
-          }
-          minHeight = Math.min(22, y);
-          let counterAux = 0;
-          for(let aux = minHeight - 1; aux >= 0; aux--) {
-            counterAux++;
-            console.log({
-              x: x,
-              y: y,
-              aux: aux,
-              block: this.state.board[aux][x],
-              check: coordsObj.has(String([x, aux]))
-            });
-            if (this.state.board[aux][x] > 0 && !coordsObj.has(String([x, aux]))) {
-              console.log({height: aux, counter: counterAux});
-              minHeight = aux;
-              counter = Math.min(counterAux - 1, counter);
-              console.log(counter);
-            }
-          }
-          if (counter === 99) {
-            minHeight = 0;
-            counter = Math.min(counterAux - 1, counter);
-          }
-
-
-          toWhite[[x, y]] = 0;
-          break;
-
         default:
           if (y > 0) {
             toWhite[[x, y]] = 0;
@@ -651,15 +409,10 @@ class Game extends React.Component {
           }
           break;
       }
+
+
       if (generateNew) {
         break;
-      }
-    }
-    if (direction === 'drop') {
-      for(let [x, y] of coords) {
-        y -= counter;
-        toColor[[x, y]] = 0;
-        newCoords.push([x,y]);
       }
     }
     if (generateNew) {
@@ -740,7 +493,7 @@ class Game extends React.Component {
   rotatePiece = (rotation) => {
     const piece = this.state.movingPiece
 
-    if (piece.type === 'o') {
+    if (piece.type === PIECE_O) {
       return
     }
     else {
@@ -835,22 +588,24 @@ class Game extends React.Component {
 
 /* Button handlers */
   gameStart = (event) => {
-    this.updateLeaderboard()
-    const piece = this.getPiece()
+    const piece = Piece.getPiece()
     this.setState({
-      nextPiece: this.generateNextPieceType(),
+      nextPiece: Piece.generateNextPieceType(),
       movingPiece: { ...piece },
       paused: false,
     })
     this.paintPiece(piece)
+    this.updateLeaderboard()
   }
 
   submitScore = (event) => {
     this.setState({ submitted: true })
+
     const link = 'http://0.0.0.0:5000/api/register'
     const data = new FormData()
     data.set('name', this.state.name)
     data.set('score', this.state.score)
+
     axios({
       method: 'post',
       url: link,
@@ -861,13 +616,12 @@ class Game extends React.Component {
         // Get the data and format it as a list of objects with name and score.
         const data = res.data
         alert(data.message)
-        const piece = this.getPiece()
+        const piece = Piece.getPiece()
         this.setState({
           score: 0,
           nextPiece: ' ',
           holdPiece: ' ',
           holdBlocked: false,
-          leaderboard: [],
 
           // In Board components
           board: Array(BOARD_HEIGHT).fill(null).map(_ => Array(BOARD_WIDTH).fill(0)),
@@ -875,7 +629,7 @@ class Game extends React.Component {
           movingPiece: { ...piece },
 
           // Timer Interval
-          counter: 29,   // will reset and fetch leaderboard every 30s
+          counter: 29000,   // will reset and fetch leaderboard every 30s (30 000 miliseconds)
           timer: 1000,  // how ofter the piece will automatically go down
 
           // General Game State
