@@ -726,8 +726,15 @@ class Game extends React.Component {
       const ySum = rotationMath[index][1]
       return [x + xSum, y + ySum]
     })
-
-    return this.checkNewCoords(rotatedCoords)
+    const outsideCoords = rotatedCoords.filter((item) => (
+      item[0] < 0 || item[0] > 9 || item[1] < 0
+    ))
+    if (outsideCoords.length > 0) {
+      return null
+    }
+    else {
+      return this.checkNewCoords(rotatedCoords)
+    }
   }
 
   rotatePiece = (rotation) => {
@@ -738,6 +745,9 @@ class Game extends React.Component {
     }
     else {
       const newCoords = this.getNextRotation(piece, rotation)
+      if (newCoords === null) {
+        return
+      }
       const newPiece = {
         ...piece,
         rotation: piece.rotation + rotation,
