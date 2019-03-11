@@ -88,6 +88,15 @@ class Game extends React.Component {
   getNewPiece = (type = '') => {
     const newPiece = Piece.getPiece(this.state.nextPiece);
 
+    const finishCheck = newPiece.coords.filter(([x, y]) => (
+      this.state.board[y-1][x] !== 0
+    ))
+    if (finishCheck.length) {
+      this.setState({ finishedGame: true })
+      alert('End match')
+      return
+    }
+
     this.setState({
       nextPiece: Piece.generateNextPieceType(),
       movingPiece: { ...newPiece },
@@ -97,7 +106,7 @@ class Game extends React.Component {
 /* End piece generation */
 
 /* Board repainting */
-  // erasePiece, paintPiece, updateBoard, checkFinishedRows
+  // erasePiece, paintPiece, checkFinishedRows
   erasePiece = (piece, board = this.state.board) => {
     let newBoard = board.slice()
     for (let [x, y] of piece.coords) {
@@ -112,43 +121,6 @@ class Game extends React.Component {
       newBoard[y][x] = color
     }
     return newBoard
-  }
-
-  // Erases old piece, paints the new one and re-renders
-  updateBoard = (movingPiece, toWhite, toColor) => {
-    //let newBoard;
-    //newBoard = erasePiece(oldPiece);
-    //newBoard = paintPiece(newPiece, newBoard);
-    let tempCoords;
-    let tempRow = [];
-    let newBoard = [];
-
-    for(let y = 0; y < 23; y++) {
-      tempRow = [];
-
-      for(let x = 0; x < 10; x++) {
-        tempCoords = [x, y];
-
-        if (toColor.hasOwnProperty(tempCoords)) {
-          tempRow.push(movingPiece.color);
-        }
-        else {
-          if (toWhite.hasOwnProperty(tempCoords)) {
-            tempRow.push(0);
-          }
-          else {
-            tempRow.push(this.state.board[y][x]);
-          }
-        }
-      }
-
-      newBoard.push(tempRow);
-    }
-
-    this.setState({
-      board: newBoard,
-      movingPiece: { ...movingPiece },
-    });
   }
 
   /*
@@ -280,7 +252,6 @@ class Game extends React.Component {
   }
 
   movePiece = (direction) => {
-  /*
     let newCoords
     const {coords} = this.state.movingPiece
     const {board} = this.state
@@ -290,40 +261,26 @@ class Game extends React.Component {
     switch(direction) {
       case 'left':
         newCoords = coords.filter(([x, y]) => (
-          x > 0 && board[y][x--] !== undefined && board[y][x--] > 0 && !coordsObj.has(String([x, y]))
+          x > 0 && board[y][x-1] !== undefined && (board[y][x-1] === 0 || (board[y][x-1] !== 0 && coordsObj.has(String(x-1) + ',' + String(y))))
         )).map(([x, y]) => (
           [x-1, y]
         ))
         break
       case 'right':
         newCoords = coords.filter(([x, y]) => (
-          x < 9 && board[y][x++] !== undefined && board[y][x++] > 0 && !coordsObj.has(String([x, y]))
+          x < 9 && board[y][x+1] !== undefined && (board[y][x+1] === 0 || (board[y][x+1] !== 0 && coordsObj.has(String(x+1) + ',' + String(y))))
         )).map(([x, y]) => (
           [x+1, y]
         ))
         break
       case 'down':
         newCoords = coords.filter(([x, y]) => (
-          y > 0
+          y > 0 && board[y-1][x] !== undefined && (board[y-1][x] === 0 || (board[y-1][x] !== 0 && coordsObj.has(String(x) + ',' + String(y-1))))
         )).map(([x, y]) => (
           [x, y-1]
         ))
-        console.log('new coords after map')
-        console.log(newCoords)
 
-        const finishCheck = newCoords.filter(([x, y]) => (
-          y > 20
-        ))
-        if (finishCheck.length) {
-          this.setState({ finishedGame: true })
-          alert('End match')
-          return
-        }
-
-        const canMove = newCoords.filter(([x, y]) => (
-          board[y][x] === 0 || !coordsObj.has(String([x, y]))
-        ))
-        if (canMove.length < 4) {
+        if (newCoords.length < 4) {
           this.getNewPiece()
           this.checkFinishedRows()
           return
@@ -336,100 +293,10 @@ class Game extends React.Component {
       return
     }
 
-    this.consoleBoard()
     const newPiece = { ...this.state.movingPiece, coords: newCoords }
-    console.log(newPiece)
     const newBoard = this.erasePiece(this.state.movingPiece)
-    this.consoleBoard(newBoard)
     const paintedBoard = this.paintPiece(newPiece, newBoard)
-    this.consoleBoard(paintedBoard)
     this.setState({ movingPiece: { ...newPiece}, board: paintedBoard.slice() })
-  //*/
-  //*
-    let toWhite = {}
-    let toColor = {}
-    let newCoords = []
-    let generateNew = false
-    let finishedGame = false
-    const {type, color, coords, rotation, rotations} = this.state.movingPiece
-    const coordsObj = Piece.getCoordsObject(this.state.movingPiece)
-
-    for (let [x, y] of coords) {
-      switch(direction) {
-        case 'left':
-          if (x > 0) {
-            toWhite[[x, y]] = 0;
-            x--
-            toColor[[x, y]] = 0;
-            newCoords.push([x,y]);
-            if (this.state.board[y][x] > 0 && !coordsObj.has(String([x, y]))) {
-              return;
-            }
-          }
-          else {
-            return;
-          }
-          break;
-
-        case 'right':
-          if (x < 9) {
-            toWhite[[x, y]] = 0;
-            x++;
-            toColor[[x, y]] = 0;
-            newCoords.push([x,y]);
-            if (this.state.board[y][x] > 0 && !coordsObj.has(String([x, y]))) {
-              return;
-            }
-          }
-          else {
-            return;
-          }
-          break;
-
-        default:
-          if (y > 0) {
-            toWhite[[x, y]] = 0;
-            y--;
-            toColor[[x, y]] = 0;
-            newCoords.push([x,y]);
-            if (this.state.board[y][x] > 0 && !coordsObj.has(String([x, y]))) {
-              if (y >= 19) {
-                finishedGame = true;
-                break;
-              }
-              else {
-                generateNew = true;
-                break;
-              }
-            }
-          }
-          else {
-            generateNew = true;
-            break;
-          }
-          break;
-      }
-
-
-      if (generateNew) {
-        break;
-      }
-    }
-    if (generateNew) {
-      this.getNewPiece();
-      this.checkFinishedRows();
-      //this.consoleBoard();
-    }
-    else {
-      //console.log({color: color, type: type, coords: newCoords});
-      this.updateBoard({color: color, type: type, coords: newCoords,
-        rotation: rotation, rotations: rotations}, toWhite, toColor);
-    }
-    if (finishedGame) {
-      this.setState({ finishedGame: true });
-      alert('End match');
-    }
-  //*/
   }
 
   removePause = () => {
@@ -479,8 +346,10 @@ class Game extends React.Component {
       const ySum = rotationMath[index][1]
       return [x + xSum, y + ySum]
     })
-    const outsideCoords = rotatedCoords.filter((item) => (
-      item[0] < 0 || item[0] > 9 || item[1] < 0
+
+    const coordObj = Piece.getCoordsObject(piece)
+    const outsideCoords = rotatedCoords.filter(([x, y]) => (
+      x < 0 || x > 9 || y < 0 || (this.state.board[y][x] !== 0 && !coordObj.has(String(x)+','+String(y)))
     ))
     if (outsideCoords.length > 0) {
       return null
@@ -524,7 +393,6 @@ class Game extends React.Component {
 
     /* Rotations */
       if (ROTATE_RIGHT.has(event.keyCode)) {
-        //console.log('ROTATE RIGHT')
         this.rotatePiece(1)
         return
       }
@@ -538,28 +406,24 @@ class Game extends React.Component {
     /* Movement */
       // MOVE LEFT
       if (MOVE_LEFT.has(event.keyCode)) {
-        //console.log('MOVE LEFT')
         this.removePause()
         this.movePiece('left')
         return
       }
       // MOVE RIGHT
       if (MOVE_RIGHT.has(event.keyCode)) {
-        //console.log('MOVE RIGHT')
         this.removePause()
         this.movePiece('right')
         return
       }
       // MOVE DOWN
       if (MOVE_DOWN.has(event.keyCode)) {
-        //console.log('MOVE DOWN')
         this.removePause()
-        this.movePiece('bottom')
+        this.movePiece('down')
         return
       }
       // DROP
       if (DROP.has(event.keyCode)) {
-        console.log('DROP')
         this.removePause()
         this.dropPiece()
         return
@@ -568,7 +432,6 @@ class Game extends React.Component {
 
     /* Hold piece */
       if (HOLD.has(event.keyCode)) {
-        //console.log('HOLD')
         this.removePause()
         this.holdPiece()
         return
@@ -577,7 +440,6 @@ class Game extends React.Component {
 
     /* Pause */
       if (PAUSE.has(event.keyCode)) {
-        //console.log('pause')
         this.setState(state => ({ paused: !state.paused }))
         return
       }
@@ -629,7 +491,6 @@ class Game extends React.Component {
           movingPiece: { ...piece },
 
           // Timer Interval
-          counter: 29000,   // will reset and fetch leaderboard every 30s (30 000 miliseconds)
           timer: 1000,  // how ofter the piece will automatically go down
 
           // General Game State
