@@ -2,6 +2,7 @@ import React from 'react'
 
 import {
   PIECE_TYPES, PIECE_O, PIECE_I, PIECE_T, PIECE_L, PIECE_J, PIECE_S, PIECE_Z,
+  WALL_KICK_TESTS, I_WALL_KICK_TESTS,
 } from './constants'
 
 
@@ -30,7 +31,6 @@ class Piece extends React.Component{
           color: 1,
           type: PIECE_O,
           rotation: 0,
-          rotations: [[0, 0]],
           coords: [[4, 21], [5, 21], [4, 20], [5, 20]],
         }
 
@@ -45,6 +45,7 @@ class Piece extends React.Component{
             [[ 1, -2], [ 0, -1], [-1,  0], [-2,  1]],
             [[-2, -1], [-1,  0], [ 0,  1], [ 1,  2]]
           ],
+          wallKickTests: { ...I_WALL_KICK_TESTS },
           coords: [[3, 20], [4, 20], [5, 20], [6, 20]],
         }
 
@@ -59,6 +60,7 @@ class Piece extends React.Component{
             [[-1, -1], [ 1, -1], [0, 0], [-1,  1]],
             [[-1,  1], [-1, -1], [0, 0], [ 1,  1]]
           ],
+          wallKickTests: { ...WALL_KICK_TESTS },
           coords: [[4, 21], [3, 20], [4, 20], [5, 20]],
         }
 
@@ -73,6 +75,7 @@ class Piece extends React.Component{
             [[-2,  0], [ 1, -1], [0, 0], [-1,  1]],
             [[ 0,  2], [-1, -1], [0, 0], [ 1,  1]]
           ],
+          wallKickTests: { ...WALL_KICK_TESTS },
           coords: [[5, 21], [3, 20], [4, 20], [5, 20]],
         }
 
@@ -87,6 +90,7 @@ class Piece extends React.Component{
             [[ 0, -2], [ 1, -1], [0, 0], [-1,  1]],
             [[-2,  0], [-1, -1], [0, 0], [ 1,  1]]
           ],
+          wallKickTests: { ...WALL_KICK_TESTS },
           coords: [[3, 21], [3, 20], [4, 20], [5, 20]],
         }
 
@@ -101,6 +105,7 @@ class Piece extends React.Component{
             [[-1, -1], [-2,  0], [ 1, -1], [0, 0]],
             [[-1,  1], [ 0,  2], [-1, -1], [0, 0]]
           ],
+          wallKickTests: WALL_KICK_TESTS,
           coords: [[4, 21], [5, 21], [3, 20], [4, 20]],
         }
 
@@ -115,6 +120,7 @@ class Piece extends React.Component{
             [[ 0, -2], [-1, -1], [0, 0], [-1,  1]],
             [[-2,  0], [-1,  1], [0, 0], [ 1,  1]]
           ],
+          wallKickTests: { ...WALL_KICK_TESTS },
           coords: [[3, 21], [4, 21], [4, 20], [5, 20]],
         }
 
