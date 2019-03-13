@@ -1,5 +1,13 @@
 version: '3'
 services:
+  api:
+    image: cgironalas/tetris_api:latest
+    restart: always
+    expose:
+      - "5000"
+    ports:
+      - "5000:5000"
+
   db:
     image: cgironalas/tetris_db:latest
     restart: always
@@ -8,13 +16,6 @@ services:
     ports:
       - "5432:5432"
 
-  api:
-    image: cgironalas/tetris_api:latest
-    restart: always
-    expose:
-      - "5000"
-    ports:
-      - "5000:5000"
 
   game:
     image: cgironalas/tetris_game:latest

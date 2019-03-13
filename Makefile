@@ -15,7 +15,7 @@ build: api db game
 	@echo "Building all containers."
 
 .PHONY: run
-run: build
+run:
 	@docker-compose -f tetris.yml up
 
 
