@@ -1,15 +1,13 @@
 version: '3'
 services:
-  api:
-    build:  ./api
+  flask:
+    build: ./api
     image: tetris_api:latest
     restart: always
     volumes:
       - ./api:/usr/api
     expose:
       - "5000"
-    ports:
-      - "5000:5000"
 
   db:
     build: ./db
@@ -17,9 +15,6 @@ services:
     restart: always
     expose:
       - "5432"
-    ports:
-      - "5432:5432"
-
 
   game:
     build: ./tetris
@@ -30,4 +25,4 @@ services:
     expose:
       - "3000"
     ports:
-      - "3000:3000"
+      - "8888:3000"
