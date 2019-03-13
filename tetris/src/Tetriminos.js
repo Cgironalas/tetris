@@ -1,134 +1,135 @@
 import React from 'react'
 
 import {
-  PIECE_TYPES, PIECE_O, PIECE_I, PIECE_T, PIECE_L, PIECE_J, PIECE_S, PIECE_Z,
-  WALL_KICK_TESTS, I_WALL_KICK_TESTS,
+  O_TETRIMINO, O_COLOR, I_TETRIMINO, I_COLOR, T_TETRIMINO, T_COLOR,
+  L_TETRIMINO, L_COLOR, J_TETRIMINO, J_COLOR, S_TETRIMINO, S_COLOR,
+  Z_TETRIMINO, Z_COLOR,
+  TETRIMINO_TYPES, WALL_KICK_TESTS, I_WALL_KICK_TESTS,
 } from './constants'
 
 
-class Piece extends React.Component{
-  // Will return an object with the piece coords where the keys will be
-  // [x, y] as a string and the values all 0s.
-  static getCoordsObject = (piece) => {
-    const coordsSet = new Set(piece.coords.map(([x,y]) => (
-      String(x)+','+String(y)
+class Tetriminos extends React.Component{
+  // Will return a set with the tetrimino coords where the elements will be
+  // the string made by 'x,y' of each coordinate.
+  static getCoordsSet = (tetrimino) => {
+    const coordsSet = new Set(tetrimino.coords.map( ([x, y]) => (
+      String(x) + ',' + String(y)
     )))
     return coordsSet
   }
 
-  // Will return the string character to be used for the next piece.
-  static generateNextPieceType = () => {
-    return PIECE_TYPES[Math.floor(Math.random()*PIECE_TYPES.length)]
+  // Will return a random tetrimino type as a string.
+  static getRandomType = () => {
+    return TETRIMINO_TYPES[Math.floor(Math.random()*TETRIMINO_TYPES.length)]
   }
 
-  // Default settings to create any new piece.
-  // if a type is given that piece will be created
-  // else it will create a random piece
-  static getPiece = (type = '') => {
+  // Default settings for any new tetrimino, based by type.
+  // If a type is given that tetrimino will be created,
+  // else it will create a random tetrimino.
+  static get = (type = '') => {
     switch(type) {
-      case PIECE_O:
+      case O_TETRIMINO:
         return {
-          color: 1,
-          type: PIECE_O,
-          rotation: 0,
+          color: O_COLOR,
+          type: O_TETRIMINO,
           coords: [[4, 21], [5, 21], [4, 20], [5, 20]],
         }
 
-      case PIECE_I:
+      case I_TETRIMINO:
         return {
-          color: 2,
-          type: PIECE_I,
+          color: I_COLOR,
           rotation: 0,
+          type: I_TETRIMINO,
+          wallKickTests: { ...I_WALL_KICK_TESTS },
           rotations: [
             [[-1,  2], [ 0,  1], [ 1,  0], [ 2, -1]],
             [[ 2,  1], [ 1,  0], [ 0, -1], [-1, -2]],
             [[ 1, -2], [ 0, -1], [-1,  0], [-2,  1]],
             [[-2, -1], [-1,  0], [ 0,  1], [ 1,  2]]
           ],
-          wallKickTests: { ...I_WALL_KICK_TESTS },
           coords: [[3, 20], [4, 20], [5, 20], [6, 20]],
         }
 
-      case PIECE_T:
+      case T_TETRIMINO:
         return {
-          color: 3,
-          type: PIECE_T,
+          color: T_COLOR,
           rotation: 0,
+          type: T_TETRIMINO,
+          wallKickTests: { ...WALL_KICK_TESTS },
           rotations: [
             [[ 1,  1], [-1,  1], [0, 0], [ 1, -1]],
             [[ 1, -1], [ 1,  1], [0, 0], [-1, -1]],
             [[-1, -1], [ 1, -1], [0, 0], [-1,  1]],
             [[-1,  1], [-1, -1], [0, 0], [ 1,  1]]
           ],
-          wallKickTests: { ...WALL_KICK_TESTS },
           coords: [[4, 21], [3, 20], [4, 20], [5, 20]],
         }
 
-      case PIECE_L:
+      case L_TETRIMINO:
         return {
-          color: 4,
-          type: PIECE_L,
+          color: L_COLOR,
           rotation: 0,
+          type: L_TETRIMINO,
+          wallKickTests: { ...WALL_KICK_TESTS },
           rotations: [
             [[ 2,  0], [-1,  1], [0, 0], [ 1, -1]],
             [[ 0, -2], [ 1,  1], [0, 0], [-1, -1]],
             [[-2,  0], [ 1, -1], [0, 0], [-1,  1]],
             [[ 0,  2], [-1, -1], [0, 0], [ 1,  1]]
           ],
-          wallKickTests: { ...WALL_KICK_TESTS },
           coords: [[5, 21], [3, 20], [4, 20], [5, 20]],
         }
 
-      case PIECE_J:
+      case J_TETRIMINO:
         return {
-          color: 5,
-          type: PIECE_J,
+          color: J_COLOR,
           rotation: 0,
+          type: J_TETRIMINO,
+          wallKickTests: { ...WALL_KICK_TESTS },
           rotations: [
             [[ 0,  2], [-1,  1], [0, 0], [ 1, -1]],
             [[ 2,  0], [ 1,  1], [0, 0], [-1, -1]],
             [[ 0, -2], [ 1, -1], [0, 0], [-1,  1]],
             [[-2,  0], [-1, -1], [0, 0], [ 1,  1]]
           ],
-          wallKickTests: { ...WALL_KICK_TESTS },
           coords: [[3, 21], [3, 20], [4, 20], [5, 20]],
         }
 
-      case PIECE_S:
+      case S_TETRIMINO:
         return {
-          color: 6,
-          type: PIECE_S,
+          color: S_COLOR,
           rotation: 0,
+          type: S_TETRIMINO,
+          wallKickTests: WALL_KICK_TESTS,
           rotations: [
             [[ 1,  1], [ 2,  0], [-1,  1], [0, 0]],
             [[ 1, -1], [ 0, -2], [ 1,  1], [0, 0]],
             [[-1, -1], [-2,  0], [ 1, -1], [0, 0]],
             [[-1,  1], [ 0,  2], [-1, -1], [0, 0]]
           ],
-          wallKickTests: WALL_KICK_TESTS,
           coords: [[4, 21], [5, 21], [3, 20], [4, 20]],
         }
 
-      case PIECE_Z:
+      case Z_TETRIMINO:
         return {
-          color: 7,
-          type: PIECE_Z,
+          color: Z_COLOR,
           rotation: 0,
+          type: Z_TETRIMINO,
+          wallKickTests: { ...WALL_KICK_TESTS },
           rotations: [
             [[ 0,  2], [ 1,  1], [0, 0], [ 1, -1]],
             [[ 2,  0], [ 1, -1], [0, 0], [-1, -1]],
             [[ 0, -2], [-1, -1], [0, 0], [-1,  1]],
             [[-2,  0], [-1,  1], [0, 0], [ 1,  1]]
           ],
-          wallKickTests: { ...WALL_KICK_TESTS },
           coords: [[3, 21], [4, 21], [4, 20], [5, 20]],
         }
 
-      default://random piece
-        const nextPiece = Piece.generateNextPieceType()
-        return Piece.getPiece(nextPiece)
+      default://random tetrimino
+        const randomType = Tetriminos.getRandomType()
+        return Tetriminos.get(randomType)
     }
   }
 }
 
-export default Piece
+export default Tetriminos

@@ -20,34 +20,43 @@ export const DOWN = 'down'
 export const LEFT = 'left'
 export const RIGHT = 'right'
 
-export const PIECE_O = 'O'
-export const PIECE_I = 'I'
-export const PIECE_T = 'T'
-export const PIECE_L = 'L'
-export const PIECE_J = 'J'
-export const PIECE_S = 'S'
-export const PIECE_Z = 'Z'
-export const PIECE_TYPES = [PIECE_O, PIECE_I, PIECE_T, PIECE_L, PIECE_J, PIECE_S, PIECE_Z]
+export const O_TETRIMINO = 'O'
+export const I_TETRIMINO = 'I'
+export const T_TETRIMINO = 'T'
+export const L_TETRIMINO = 'L'
+export const J_TETRIMINO = 'J'
+export const S_TETRIMINO = 'S'
+export const Z_TETRIMINO = 'Z'
+export const TETRIMINO_TYPES = [O_TETRIMINO, I_TETRIMINO, T_TETRIMINO, L_TETRIMINO, J_TETRIMINO, S_TETRIMINO, Z_TETRIMINO]
 
+export const O_COLOR = 1
+export const I_COLOR = 2
+export const T_COLOR = 3
+export const L_COLOR = 4
+export const J_COLOR = 5
+export const S_COLOR = 6
+export const Z_COLOR = 7
+
+export const EMPTY_COLOR = 0
 export const SHADOW_COLOR = 9
 
 export const WALL_KICK_TESTS = {
-  '0,1': [[0, 0], [-1, 0], [-1,  1], [0, -2], [-1, -2]],
-  '1,0': [[0, 0], [ 1, 0], [ 1, -1], [0,  2], [ 1,  2]],
-  '1,2': [[0, 0], [ 1, 0], [ 1, -1], [0,  2], [ 1,  2]],
-  '2,1': [[0, 0], [-1, 0], [-1,  1], [0, -2], [-1, -2]],
-  '2,3': [[0, 0], [ 1, 0], [ 1,  1], [0, -2], [ 1, -2]],
-  '3,2': [[0, 0], [-1, 0], [-1, -1], [0,  2], [-1,  2]],
-  '3,0': [[0, 0], [-1, 0], [-1, -1], [0,  2], [-1,  2]],
-  '0,3': [[0, 0], [ 1, 0], [ 1,  1], [0, -2], [ 1, -2]],
+  '0,1': [[ 0,  0], [-1,  0], [-1,  1], [ 0, -2], [-1, -2]],
+  '1,0': [[ 0,  0], [ 1,  0], [ 1, -1], [ 0,  2], [ 1,  2]],
+  '1,2': [[ 0,  0], [ 1,  0], [ 1, -1], [ 0,  2], [ 1,  2]],
+  '2,1': [[ 0,  0], [-1,  0], [-1,  1], [ 0, -2], [-1, -2]],
+  '2,3': [[ 0,  0], [ 1,  0], [ 1,  1], [ 0, -2], [ 1, -2]],
+  '3,2': [[ 0,  0], [-1,  0], [-1, -1], [ 0,  2], [-1,  2]],
+  '3,0': [[ 0,  0], [-1,  0], [-1, -1], [ 0,  2], [-1,  2]],
+  '0,3': [[ 0,  0], [ 1,  0], [ 1,  1], [ 0, -2], [ 1, -2]],
 }
 export const I_WALL_KICK_TESTS = {
-  '0,1': [[0, 0], [-2, 0], [ 1, 0], [-2, -1], [ 1,  2]],
-  '1,0': [[0, 0], [ 2, 0], [-1, 0], [ 2,  1], [-1, -2]],
-  '1,2': [[0, 0], [-1, 0], [ 2, 0], [-1,  2], [ 2, -1]],
-  '2,1': [[0, 0], [ 1, 0], [-2, 0], [ 1, -2], [-2,  1]],
-  '2,3': [[0, 0], [ 2, 0], [-1, 0], [ 2,  1], [-1, -2]],
-  '3,2': [[0, 0], [-2, 0], [ 1, 0], [-2, -1], [ 1,  2]],
-  '3,0': [[0, 0], [ 1, 0], [-2, 0], [ 1, -2], [-2,  1]],
-  '0,3': [[0, 0], [-1, 0], [ 2, 0], [-1,  2], [ 2, -1]],
+  '0,1': [[ 0,  0], [-2,  0], [ 1,  0], [-2, -1], [ 1,  2]],
+  '1,0': [[ 0,  0], [ 2,  0], [-1,  0], [ 2,  1], [-1, -2]],
+  '1,2': [[ 0,  0], [-1,  0], [ 2,  0], [-1,  2], [ 2, -1]],
+  '2,1': [[ 0,  0], [ 1,  0], [-2,  0], [ 1, -2], [-2,  1]],
+  '2,3': [[ 0,  0], [ 2,  0], [-1,  0], [ 2,  1], [-1, -2]],
+  '3,2': [[ 0,  0], [-2,  0], [ 1,  0], [-2, -1], [ 1,  2]],
+  '3,0': [[ 0,  0], [ 1,  0], [-2,  0], [ 1, -2], [-2,  1]],
+  '0,3': [[ 0,  0], [-1,  0], [ 2,  0], [-1,  2], [ 2, -1]],
 }

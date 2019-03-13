@@ -5,12 +5,13 @@ import  axios from 'axios'
 
 import './index.css'
 import Board from './Board'
-import Piece from './pieces'
+import Tetriminos from './Tetriminos'
 import getTurnPoints from './scoring'
 import {
-  BOARD_HEIGHT, BOARD_WIDTH, DEFAULT_TIMER, LB_UPDATE_RATE, ROTATE_RIGHT, ROTATE_LEFT,
-  MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, DROP, HOLD, PAUSE, PIECE_O, SHADOW_COLOR,
-  DOWN, LEFT, RIGHT,
+  BOARD_HEIGHT, BOARD_WIDTH, DEFAULT_TIMER, LB_UPDATE_RATE,
+  ROTATE_RIGHT, ROTATE_LEFT, MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, DROP, HOLD,
+  PAUSE, DOWN, LEFT, RIGHT,
+  O_TETRIMINO, SHADOW_COLOR, EMPTY_COLOR,
 } from './constants'
 
 class Game extends React.Component {
@@ -58,7 +59,7 @@ class Game extends React.Component {
 
   // Fetch the leaderboard from the API
   updateLeaderboard = () => {
-    axios.get('http://0.0.0.0:5000/api/leaderboard')
+    axios.get('http://flask:5000/api/leaderboard')
       .then(res => {
         this.setState({ leaderboard: res.data })
       })
@@ -85,7 +86,7 @@ class Game extends React.Component {
 
 /** Piece generation **/
   getNewPiece = () => {
-    const newPiece = Piece.getPiece(this.state.nextPiece)
+    const newPiece = Tetriminos.get(this.state.nextPiece)
 
     const finishCheck = newPiece.coords.filter(([x, y]) => (
       this.state.board[y-1][x] !== 0
@@ -100,7 +101,7 @@ class Game extends React.Component {
         shadow: [],
         holdBlocked: false,
         movingPiece: { ...newPiece },
-        nextPiece: Piece.generateNextPieceType(),
+        nextPiece: Tetriminos.getRandomType(),
       })
     }
   }
@@ -183,23 +184,18 @@ class Game extends React.Component {
       let newPiece, nextPiece, newShadow
 
       if (currentHold === ' ') {
-        //console.log('hold and create new')
-        nextPiece = Piece.generateNextPieceType()
-        newPiece = Piece.getPiece(nextPieceType)
+        nextPiece = Tetriminos.getRandomType()
+        newPiece = Tetriminos.get(nextPieceType)
         newShadow = this.getShadowCoords(newPiece, oldPiece)
       }
       else {
-        //console.log('hold and switch')
         nextPiece = nextPieceType
-        newPiece = Piece.getPiece(currentHold)
+        newPiece = Tetriminos.get(currentHold)
         newShadow = this.getShadowCoords(newPiece, oldPiece)
       }
 
       const shadowBoard = this.updatePiece(oldShadow, newShadow, SHADOW_COLOR)
-      console.log('here')
       const updatedBoard = this.updatePiece(oldPiece.coords, newPiece.coords, newPiece.color, shadowBoard)
-      //const erasedBoard = this.erasePiece(oldPiece.coords)
-      //const board = this.paintPiece(newPiece, erasedBoard)
 
       this.setState({
         holdBlocked: true,
@@ -220,9 +216,9 @@ class Game extends React.Component {
     const board = this.state.board
     const oldShadow = this.state.shadow
 
-    const oldPieceCoords = Piece.getCoordsObject(oldPiece)
-    const pieceCoordsObj = Piece.getCoordsObject(piece)
-    const shadowCoordsObj = Piece.getCoordsObject({coords: oldShadow})
+    const oldPieceCoords = Tetriminos.getCoordsSet(oldPiece)
+    const pieceCoordsObj = Tetriminos.getCoordsSet(piece)
+    const shadowCoordsObj = Tetriminos.getCoordsSet({coords: oldShadow})
 
     const movableCoords = piece.coords.filter( ([x, y]) => (y > 0) )
     if (movableCoords.length !== 4) {
@@ -257,63 +253,24 @@ class Game extends React.Component {
   // dropPiece, movePiece, removePause
 
   dropPiece = () => {
-  /*
-    // It should idealy be changed, if not the drop command was wasted.
-    let counter = BOARD_HEIGHT
+    if (this.state.shadow.length) {
+      const oldPiece = this.state.movingPiece
+      const newPiece = { ...oldPiece, coords: this.state.shadow }
 
-    // Object used to make sure the piece does not consider its own blocks
-    // as possible stop locations.
-    const coordsObj = Piece.getCoordsObject(this.state.movingPiece)
+      const erasedShadowBoard = this.erasePiece(this.state.shadow)
+      const updatedBoard = this.updatePiece(oldPiece.coords, newPiece.coords, newPiece.color, erasedShadowBoard)
 
-    // Filter coordinates to make sure they are not already at the base of the
-    // board
-    const movableCoords = this.state.movingPiece.coords.filter((item) => (
-      item[1] > 0
-    ))
-    if (movableCoords.length !== 4) {
-      return
+      this.setState({
+        shadow: [],
+        board: [ ...updatedBoard ],
+        movingPiece: { ...newPiece },
+      })
     }
-
-    // For all the blocks of the piece check how much each one can drop and keep
-    // the lowest value in the counter variable
-    for (let [x, y] of movableCoords) {
-      let counterAux = 0
-      for(let tempY = y - 1; tempY >= 0; tempY--) {
-        counterAux++
-        if (this.state.board[tempY][x] > 0 && !coordsObj.has(String([x, tempY]))) {
-          counter = Math.min(counterAux - 1, counter)
-        }
-        if (tempY === 0) {
-          counter = Math.min(counterAux, counter)
-        }
-      }
-    }
-    if (counter === BOARD_HEIGHT) {
-      return
-    }
-
-    // Get the new coords based on the counter from the last loop
-    const newCoords = this.state.movingPiece.coords.map(([x, y]) => (
-      [x, y-counter]
-    ))
-  */
-    const oldPiece = this.state.movingPiece
-    const newPiece = { ...oldPiece, coords: this.state.shadow }//newCoords }
-
-    const erasedShadowBoard = this.erasePiece(this.state.shadow)
-    const updatedBoard = this.updatePiece(oldPiece.coords, newPiece.coords, newPiece.color, erasedShadowBoard)
-    //this.erasePiece(this.state.movingPiece)
-    //this.paintPiece(newPiece)
-    this.setState({
-      movingPiece: { ...newPiece },
-      board: updatedBoard.slice(),
-      shadow: [],
-    })
   }
 
   movePiece = (direction) => {
-    const shadowCoordsObj = Piece.getCoordsObject({coords: this.state.shadow})
-    const pieceCoordsObj = Piece.getCoordsObject(this.state.movingPiece)
+    const shadowCoordsObj = Tetriminos.getCoordsSet({coords: this.state.shadow})
+    const pieceCoordsObj = Tetriminos.getCoordsSet(this.state.movingPiece)
     const oldPiece = this.state.movingPiece
     const {board} = this.state
 
@@ -386,36 +343,34 @@ class Game extends React.Component {
 /* End piece movement */
 
 /* Pice rotation */
-  checkKicks = (coords) => {
-    let good
-    let xSum = 0
-    let ySum = 0
-    do {
-      good = true
-      for (let [x, y] of coords) {
-        x = x + xSum
-        y = y + ySum
-        xSum = 0
-        ySum = 0
-        if (x < 0) {
-          good = false
-          ySum = Math.max(ySum, 0)
-          xSum = Math.abs(xSum, x)
-          break
-        }
-        if (x > 9) {
-          good = false
-          ySum = 0
-          xSum = 0 - x + 9
-        }
-        if (y < 0) {
-          good = false
-          ySum = Math.max(ySum, Math.abs(y))
-        }
+  checkKicks = (coords, piece, rotation) => {
+    const from = piece.rotation % 4
+    const to = (from + rotation) % 4
+    const testsKey = String(from) + ',' + String(to)
+    const currentTests = piece.wallKickTests[testsKey]
+
+    const board = [ ...this.state.board ]
+    const pieceCoordsObj = Tetriminos.getCoordsSet(piece)
+
+    const tests = currentTests.map( ([sumX, sumY]) => (
+      coords.map( ([x, y]) => (
+        [x + sumX, y + sumY]
+      )).filter( ([X, Y]) => (
+        board[Y] !== undefined  && board[Y][X] !== undefined && (
+          board[Y][X] === EMPTY_COLOR || board[Y][X] === SHADOW_COLOR || (
+            pieceCoordsObj.has(String(X) + ',' + String(Y))
+          )
+        )
+      ))
+    ))
+
+    for (coords of tests) {
+      if (coords.length === 4) {
+        return coords
       }
-    } while (!good);
-    let checkedCoords = coords
-    return checkedCoords
+    }
+
+    return null
   }
 
   getNextRotation = (piece, rotation) => {
@@ -428,29 +383,14 @@ class Game extends React.Component {
       return [x + xSum, y + ySum]
     })
 
-    const pieceCoordObj = Piece.getCoordsObject(piece)
-    const shadowCoordObj = Piece.getCoordsObject({coords: this.state.shadow})
-
-    const outsideCoords = rotatedCoords.filter(([x, y]) => (
-      x < 0 || x > 9 || y < 0 || (
-        this.state.board[y][x] !== 0 &&
-        !pieceCoordObj.has(String(x)+','+String(y)) &&
-        !shadowCoordObj.has(String(x)+','+String(y))
-      )
-    ))
-    if (outsideCoords.length) {
-      return null
-    }
-    else {
-      return this.checkKicks(rotatedCoords)
-    }
+    return this.checkKicks(rotatedCoords, piece, rotation)
   }
 
   rotatePiece = (rotation) => {
     const oldPiece = this.state.movingPiece
     const oldShadowCoords = this.state.shadow
 
-    if (oldPiece.type === PIECE_O) {
+    if (oldPiece.type === O_TETRIMINO) {
       return
     }
     else {
@@ -537,7 +477,7 @@ class Game extends React.Component {
   gameStart = (event) => {
     this.updateLeaderboard()
 
-    const piece = Piece.getPiece()
+    const piece = Tetriminos.get()
     const shadow = this.getShadowCoords(piece)
     const board = Array(BOARD_HEIGHT).fill(null).map(_ => Array(BOARD_WIDTH).fill(0))
 
@@ -547,10 +487,11 @@ class Game extends React.Component {
 
     this.setState({
       paused: false,
+      timer: DEFAULT_TIMER,
       shadow: [ ...shadow ],
       board: [ ...updatedBoard],
       movingPiece: { ...piece },
-      nextPiece: Piece.generateNextPieceType(),
+      nextPiece: Tetriminos.getRandomType(),
     })
   }
 
@@ -560,7 +501,7 @@ class Game extends React.Component {
     const data = new FormData()
     data.set('name', this.state.name)
     data.set('score', this.state.score)
-    const link = 'http://0.0.0.0:5000/api/register'
+    const link = 'http://flask:5000/api/register'
 
     axios({
       url: link,
@@ -575,7 +516,7 @@ class Game extends React.Component {
         const data = res.data
         alert(data.message)
 
-        const piece = Piece.getPiece()
+        const piece = Tetriminos.get()
         this.setState({
           // Side Data
           score: 0,
@@ -596,6 +537,11 @@ class Game extends React.Component {
           submitted: false,
           finishedGame: false,
         })
+        this.downInterval = setInterval(() => {
+          if (!this.state.finishedGame && !this.state.paused) {
+            this.movePiece(DOWN);
+          }
+        }, this.state.timer)
       })
   }
 

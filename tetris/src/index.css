@@ -72,12 +72,13 @@ ol, ul {
   border: 2px solid #000;
 }
 
-/* Z-Tetri2ino */
+/* Z-Tetrimino */
 .color7 {
   background: #ff0000;
   border: 2px solid #000;
 }
 
+/* Shadow */
 .color9 {
   background: #aaaaaa;
   border: 1px solid #000;
