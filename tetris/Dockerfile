@@ -2,13 +2,10 @@ FROM node:10-alpine
 
 WORKDIR /usr/src/tetris
 
-COPY package*.json ./
+RUN npm install -g serve
 
-RUN npm install
+COPY ./build ./
 
-COPY ./public ./public
-COPY ./src ./src
+EXPOSE 5000
 
-EXPOSE 3000
-
-CMD ["npm", "start"]
+CMD ["serve", "-s"]

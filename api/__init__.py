@@ -19,7 +19,7 @@ APP.config.update(
 )
 
 DB = SQLAlchemy(APP)
-API_BLUEPRINT = Blueprint('api', __name__, url_prefix='/api')
+API_BLUEPRINT = Blueprint('api', __name__, url_prefix='/flask')
 
 class Leaderboard(DB.Model): #type:ignore
     '''SQLAlchemy Leaderboard table model for the API.'''

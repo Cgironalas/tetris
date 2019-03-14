@@ -62,7 +62,7 @@ class Game extends React.Component {
 
   // Fetch the leaderboard from the API
   updateLeaderboard = () => {
-    axios.get('http://flask:5000/api/leaderboard')
+    axios.get('/flask/leaderboard')
       .then(res => {
         this.setState({ leaderboard: res.data })
       })
@@ -504,7 +504,7 @@ class Game extends React.Component {
     const data = new FormData()
     data.set('name', this.state.name)
     data.set('score', this.state.score)
-    const link = 'http://flask:5000/api/register'
+    const link = '/flask/register'
 
     axios({
       url: link,
@@ -564,7 +564,7 @@ class Game extends React.Component {
 	        : <h1>GAME PAUSED</h1> : null
           }
           <br/>
-	  <div className='game-info'>	
+	  <div className='game-info'>
 		<h4>CONTROLS</h4>
 		<p>To move left you can use: 'LEFT ARROW, h, a'</p>
 		<p>To move right you can use: 'RIGHT ARROW, l, d, e'</p>
