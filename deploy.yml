@@ -1,0 +1,50 @@
+version: '3'
+services:
+  nginx:
+    build: ./nginx
+    restart: always
+    networks:
+      - nginx-net
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+
+  flask:
+    build: ./api
+    image: tetris_api:latest
+    restart: always
+    depends_on:
+      - nginx
+    volumes:
+      - ./api:/usr/api
+    networks:
+      - nginx-net
+    expose:
+      - "5000"
+    ports:
+      - "5555:5000"
+
+  db:
+    build: ./db
+    image: tetris_db:latest
+    restart: always
+    networks:
+      - nginx-net
+    expose:
+      - "5432"
+
+  game_deploy:
+    build: ./tetris/build
+    image: tetris_game_deploy:latest
+    restart: always
+    networks:
+      - nginx-net
+    expose:
+      - "5000"
+    ports:
+      - "8080:5000"
+
+networks:
+  nginx-net:
+    driver: bridge
