@@ -1,5 +1,3 @@
-import React from 'react'
-
 import {
   O_TETRIMINO, O_COLOR, I_TETRIMINO, I_COLOR, T_TETRIMINO, T_COLOR,
   L_TETRIMINO, L_COLOR, J_TETRIMINO, J_COLOR, S_TETRIMINO, S_COLOR,
@@ -7,11 +5,10 @@ import {
   TETRIMINO_TYPES, WALL_KICK_TESTS, I_WALL_KICK_TESTS,
 } from './constants'
 
-
-class Tetriminos extends React.Component{
+/* Static Tetrimino related functions */
   // Will return a set with the tetrimino coords where the elements will be
   // the string made by 'x,y' of each coordinate.
-  static getCoordsSet = (tetrimino) => {
+  export const getTetriminoCoordsSet = (tetrimino) => {
     const coordsSet = new Set(tetrimino.coords.map( ([x, y]) => (
       String(x) + ',' + String(y)
     )))
@@ -19,14 +16,14 @@ class Tetriminos extends React.Component{
   }
 
   // Will return a random tetrimino type as a string.
-  static getRandomType = () => {
+  export const getRandomTetriminoType = () => {
     return TETRIMINO_TYPES[Math.floor(Math.random()*TETRIMINO_TYPES.length)]
   }
 
   // Default settings for any new tetrimino, based by type.
   // If a type is given that tetrimino will be created,
   // else it will create a random tetrimino.
-  static get = (type = '') => {
+  export const getTetrimino = (type = '') => {
     switch(type) {
       case O_TETRIMINO:
         return {
@@ -126,10 +123,8 @@ class Tetriminos extends React.Component{
         }
 
       default://random tetrimino
-        const randomType = Tetriminos.getRandomType()
-        return Tetriminos.get(randomType)
+        const randomType = getRandomTetriminoType()
+        return getTetrimino(randomType)
     }
   }
-}
-
-export default Tetriminos
+/* End of Tetrimino related functions*/

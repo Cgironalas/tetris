@@ -5,8 +5,11 @@ import  axios from 'axios'
 
 import './index.css'
 import Board from './Board'
-import Tetriminos from './Tetriminos'
+
 import getTurnPoints from './scoring'
+import {
+  getTetriminoCoordsSet, getRandomTetriminoType, getTetrimino
+} from './tetriminos'
 import {
   BOARD_HEIGHT, BOARD_WIDTH, DEFAULT_TIMER, LB_UPDATE_RATE,
   ROTATE_RIGHT, ROTATE_LEFT, MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, DROP, HOLD,
@@ -86,7 +89,7 @@ class Game extends React.Component {
 
 /** Piece generation **/
   getNewPiece = () => {
-    const newPiece = Tetriminos.get(this.state.nextPiece)
+    const newPiece = getTetrimino(this.state.nextPiece)
 
     const finishCheck = newPiece.coords.filter(([x, y]) => (
       this.state.board[y-1][x] !== 0
@@ -101,7 +104,7 @@ class Game extends React.Component {
         shadow: [],
         holdBlocked: false,
         movingPiece: { ...newPiece },
-        nextPiece: Tetriminos.getRandomType(),
+        nextPiece: getRandomTetriminoType(),
       })
     }
   }
@@ -184,13 +187,13 @@ class Game extends React.Component {
       let newPiece, nextPiece, newShadow
 
       if (currentHold === ' ') {
-        nextPiece = Tetriminos.getRandomType()
-        newPiece = Tetriminos.get(nextPieceType)
+        nextPiece = getRandomTetriminoType()
+        newPiece = getTetrimino(nextPieceType)
         newShadow = this.getShadowCoords(newPiece, oldPiece)
       }
       else {
         nextPiece = nextPieceType
-        newPiece = Tetriminos.get(currentHold)
+        newPiece = getTetrimino(currentHold)
         newShadow = this.getShadowCoords(newPiece, oldPiece)
       }
 
@@ -216,9 +219,9 @@ class Game extends React.Component {
     const board = this.state.board
     const oldShadow = this.state.shadow
 
-    const oldPieceCoords = Tetriminos.getCoordsSet(oldPiece)
-    const pieceCoordsObj = Tetriminos.getCoordsSet(piece)
-    const shadowCoordsObj = Tetriminos.getCoordsSet({coords: oldShadow})
+    const pieceCoordsObj = getTetriminoCoordsSet(piece)
+    const oldPieceCoords = getTetriminoCoordsSet(oldPiece)
+    const shadowCoordsObj = getTetriminoCoordsSet({coords: oldShadow})
 
     const movableCoords = piece.coords.filter( ([x, y]) => (y > 0) )
     if (movableCoords.length !== 4) {
@@ -269,8 +272,8 @@ class Game extends React.Component {
   }
 
   movePiece = (direction) => {
-    const shadowCoordsObj = Tetriminos.getCoordsSet({coords: this.state.shadow})
-    const pieceCoordsObj = Tetriminos.getCoordsSet(this.state.movingPiece)
+    const shadowCoordsObj = getTetriminoCoordsSet({coords: this.state.shadow})
+    const pieceCoordsObj = getTetriminoCoordsSet(this.state.movingPiece)
     const oldPiece = this.state.movingPiece
     const {board} = this.state
 
@@ -350,7 +353,7 @@ class Game extends React.Component {
     const currentTests = piece.wallKickTests[testsKey]
 
     const board = [ ...this.state.board ]
-    const pieceCoordsObj = Tetriminos.getCoordsSet(piece)
+    const pieceCoordsObj = getTetriminoCoordsSet(piece)
 
     const tests = currentTests.map( ([sumX, sumY]) => (
       coords.map( ([x, y]) => (
@@ -477,7 +480,7 @@ class Game extends React.Component {
   gameStart = (event) => {
     this.updateLeaderboard()
 
-    const piece = Tetriminos.get()
+    const piece = getTetrimino()
     const shadow = this.getShadowCoords(piece)
     const board = Array(BOARD_HEIGHT).fill(null).map(_ => Array(BOARD_WIDTH).fill(0))
 
@@ -491,7 +494,7 @@ class Game extends React.Component {
       shadow: [ ...shadow ],
       board: [ ...updatedBoard],
       movingPiece: { ...piece },
-      nextPiece: Tetriminos.getRandomType(),
+      nextPiece: getRandomTetriminoType(),
     })
   }
 
@@ -516,7 +519,7 @@ class Game extends React.Component {
         const data = res.data
         alert(data.message)
 
-        const piece = Tetriminos.get()
+        const piece = getTetrimino()
         this.setState({
           // Side Data
           score: 0,
