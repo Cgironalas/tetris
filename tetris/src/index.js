@@ -560,15 +560,25 @@ class Game extends React.Component {
           {
             this.state.paused ?
               this.state.nextPiece === ' ' ?
-                <h1>NEW GAME</h1>
-              : <h1>GAME PAUSED</h1>
-            : null
+		<h1>NEW GAME</h1>
+	        : <h1>GAME PAUSED</h1> : null
           }
           <br/>
+	  <div className='game-info'>	
+		<h4>CONTROLS</h4>
+		<p>To move left you can use: 'LEFT ARROW, h, a'</p>
+		<p>To move right you can use: 'RIGHT ARROW, l, d, e'</p>
+		<p>To move down you can use: 'DOWN ARROW, j, s, o'</p>
+		<p>To rotate the current piece use: 'SPACEBAR, UP ARROW, r'</p>
+		<p>To hold a piece press 'SHIFT'</p>
+		<p>To drop the current piece press 'ENTER'</p>
+		<p>You can pause the game by pressing 'p'</p>
+	  </div>
+
         </div>
 
         <div className="game-board">
-          <Board rows={this.state.board} />
+          <Board rows={this.state.board.slice(0, 20)} />
         </div>
         <div className="game-info">
           <div className='game-info'><b>Score</b></div>
