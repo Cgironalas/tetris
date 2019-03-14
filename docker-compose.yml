@@ -1,10 +1,10 @@
 version: '3'
 services:
-  flask:
-    image: cgironalas/tetris_api:latest
+  nginx:
+    image: cgironalas/tetris_proxy:latest
     restart: always
-    expose:
-      - "5000"
+    ports:
+      - "80:80"
 
   db:
     image: cgironalas/tetris_db:latest
@@ -12,10 +12,20 @@ services:
     expose:
       - "5432"
 
+  flask:
+    image: cgironalas/tetris_api:latest
+    restart: always
+    depends_on:
+      - nginx
+    expose:
+      - "5000"
+
   game:
     image: cgironalas/tetris_game:latest
     restart: always
+    depends_on:
+      - nginx
+      - db
+      - flask
     expose:
       - "3000"
-    ports:
-      - "8888:3000"
