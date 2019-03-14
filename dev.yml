@@ -18,7 +18,7 @@ services:
 
   flask:
     build: ./api
-    image: tetris_api:latest
+    image: tetris_api_dev:latest
     restart: always
     depends_on:
       - nginx
@@ -30,14 +30,14 @@ services:
   game:
     build:
       context: ./tetris
-      dockerfile: Dockerfile
-    image: tetris_game:latest
+      dockerfile: Dockerfile_dev
+    image: tetris_game_dev:latest
     restart: always
     depends_on:
       - nginx
       - db
       - flask
     volumes:
-      - ./tetris/build:/usr/src/tetris
+      - ./tetris:/usr/src/tetris
     expose:
       - "3000"

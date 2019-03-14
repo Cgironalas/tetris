@@ -6,6 +6,6 @@ RUN npm install -g serve
 
 COPY ./build ./
 
-EXPOSE 5000
+EXPOSE 3000
 
-CMD ["serve", "-s"]
+CMD ["serve", "-s", "-l", "3000"]
