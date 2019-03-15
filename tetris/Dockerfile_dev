@@ -4,12 +4,7 @@ WORKDIR /usr/src/tetris
 
 COPY package*.json ./
 
-VOLUME ./node_modules
-
 RUN npm install
-
-COPY ./public ./public
-COPY ./src ./src
 
 EXPOSE 3000
 

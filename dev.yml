@@ -38,6 +38,7 @@ services:
       - db
       - flask
     volumes:
-      - ./tetris:/usr/src/tetris
+      - ./tetris/src:/usr/src/tetris/src
+      - ./tetris/public:/usr/src/tetris/public
     expose:
       - "3000"
