@@ -283,7 +283,7 @@ class Game extends React.Component {
       case LEFT:
         newCoords = oldPiece.coords.filter(([x, y]) => (
           x > 0 && board[y][x-1] !== undefined && (
-            board[y][x-1] === EMPTY_COLOR || board[y][x-1] === SHADOW_COLOR || 
+            board[y][x-1] === EMPTY_COLOR || board[y][x-1] === SHADOW_COLOR ||
             pieceCoordsObj.has(String(x-1) + ',' + String(y))
           )
         )).map(([x, y]) => ( [x-1, y] ))
@@ -291,7 +291,7 @@ class Game extends React.Component {
       case RIGHT:
         newCoords = oldPiece.coords.filter(([x, y]) => (
           x < 9 && board[y][x+1] !== undefined && (
-            board[y][x+1] === EMPTY_COLOR || board[y][x+1] === SHADOW_COLOR || 
+            board[y][x+1] === EMPTY_COLOR || board[y][x+1] === SHADOW_COLOR ||
             pieceCoordsObj.has(String(x+1) + ',' + String(y))
           )
         )).map(([x, y]) => ( [x+1, y] ))
@@ -548,13 +548,14 @@ class Game extends React.Component {
           <br/>
 	  <div className='game-info'>
 		<h4>CONTROLS</h4>
-		<p>To move left you can use: 'LEFT ARROW, h, a'</p>
-		<p>To move right you can use: 'RIGHT ARROW, l, d, e'</p>
-		<p>To move down you can use: 'DOWN ARROW, j, s, o'</p>
-		<p>To rotate the current piece use: 'SPACEBAR, UP ARROW, r'</p>
+		<p>To move left you can use: 'LEFT ARROW, h, or a'</p>
+		<p>To move right you can use: 'RIGHT ARROW, l, d, or e'</p>
+		<p>To move down you can use: 'DOWN ARROW, j, s, or o'</p>
+		<p>To rotate the current piece use: 'SPACEBAR, UP ARROW, k, or r'</p>
 		<p>To hold a piece press 'SHIFT'</p>
 		<p>To drop the current piece press 'ENTER'</p>
 		<p>You can pause the game by pressing 'p'</p>
+                <p>After pressing 'Start Game' please click somewhere on the board</p>
 	  </div>
 
         </div>
