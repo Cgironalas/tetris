@@ -1,4 +1,4 @@
-export const ROTATE_RIGHT = new Set([75, 38, 188, 87, 82])
+export const ROTATE_RIGHT = new Set([75, 38, 188, 87, 82, 32])
 export const ROTATE_LEFT = new Set([88])
 export const MOVE_RIGHT = new Set([76, 39, 69, 68])
 export const MOVE_LEFT = new Set([72, 37, 65])
