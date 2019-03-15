@@ -11,10 +11,11 @@ import {
   getTetriminoCoordsSet, getRandomTetriminoType, getTetrimino
 } from './tetriminos'
 import {
-  BOARD_HEIGHT, BOARD_WIDTH, DEFAULT_TIMER, LB_UPDATE_RATE,
-  ROTATE_RIGHT, ROTATE_LEFT, MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, DROP, HOLD,
+  BOARD_HEIGHT, BOARD_WIDTH,
+  ROTATE_RIGHT, MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, DROP, HOLD,
   PAUSE, DOWN, LEFT, RIGHT,
   O_TETRIMINO, SHADOW_COLOR, EMPTY_COLOR,
+  MINIMUM_TIMER, DEFAULT_TIMER, LB_UPDATE_RATE, TIMER_REDUCTION_PER_ROW,
 } from './constants'
 
 class Game extends React.Component {
@@ -30,13 +31,13 @@ class Game extends React.Component {
     // In Board components
     shadow: [],
     movingPiece: {
-      color: 0,
+      color: EMPTY_COLOR,
       type: ' ',
       coords: [],
       rotation: 0,
       rotations: [],
     },
-    board: Array(BOARD_HEIGHT).fill(null).map(_ => Array(BOARD_WIDTH).fill(0)),
+    board: Array(BOARD_HEIGHT).fill(null).map(_ => Array(BOARD_WIDTH).fill(EMPTY_COLOR)),
 
     // Timer Interval
     timer: DEFAULT_TIMER,  // how ofter the piece will automatically go down
@@ -92,7 +93,7 @@ class Game extends React.Component {
     const newPiece = getTetrimino(this.state.nextPiece)
 
     const finishCheck = newPiece.coords.filter(([x, y]) => (
-      this.state.board[y-1][x] !== 0
+      this.state.board[y-1][x] !== EMPTY_COLOR
     ))
     if (finishCheck.length) {
       alert('End match')
@@ -116,7 +117,7 @@ class Game extends React.Component {
   erasePiece = (coords, board = this.state.board) => {
     let newBoard = board.slice()
     for (let [x, y] of coords) {
-      newBoard[y][x] = 0
+      newBoard[y][x] = EMPTY_COLOR
     }
     return newBoard
   }
@@ -142,8 +143,8 @@ class Game extends React.Component {
   checkFinishedRows = () => {
     //console.log('\nChecking finished rows...');
     const newBoard = this.state.board.filter((row) => (
-      row.indexOf(0) > -1
-    ));
+      row.indexOf(EMPTY_COLOR) > -1
+    ))
 
     const completedRows = BOARD_HEIGHT - newBoard.length
     //console.log('lines completed: ' + completedRows);
@@ -151,27 +152,27 @@ class Game extends React.Component {
     if (completedRows > 0) {
       // Finish filling the board with 0s
       const filledBoard = this.state.board.reduce((board, row) => {
-        if (row.indexOf(0) === -1) {
-          return [...board, (Array(10).fill(0))]
+        if (row.indexOf(EMPTY_COLOR) === -1) {
+          return [...board, (Array(BOARD_WIDTH).fill(EMPTY_COLOR))]
         }
         return board
       }, newBoard)
 
 
       // Get the new score.
-      const newScore = this.state.score + getTurnPoints(completedRows);
+      const newScore = this.state.score + getTurnPoints(completedRows)
 
-      const newTimer = Math.max(this.state.timer - (completedRows * 20), 100);
+      const newTimer = Math.max(this.state.timer - (completedRows * TIMER_REDUCTION_PER_ROW), MINIMUM_TIMER)
 
       this.setState({
         score: newScore,
         board: filledBoard,
         timer: newTimer,
       })
-      clearInterval(this.downInterval);
+      clearInterval(this.downInterval)
       this.downInterval = setInterval(() => {
         if (!this.state.finishedGame && !this.state.paused) {
-          this.movePiece('down');
+          this.movePiece(DOWN);
         }
       }, this.state.timer)
     }
@@ -180,25 +181,25 @@ class Game extends React.Component {
   holdPiece = () => {
     if (this.state.holdBlocked === false) {
       const nextPieceType = this.state.nextPiece
-      const currentHold = this.state.holdPiece
+      const holdPieceType = this.state.holdPiece
       const oldPiece = this.state.movingPiece
       const oldShadow = this.state.shadow
 
       let newPiece, nextPiece, newShadow
 
-      if (currentHold === ' ') {
+      if (holdPieceType === ' ') {
         nextPiece = getRandomTetriminoType()
         newPiece = getTetrimino(nextPieceType)
         newShadow = this.getShadowCoords(newPiece, oldPiece)
       }
       else {
         nextPiece = nextPieceType
-        newPiece = getTetrimino(currentHold)
+        newPiece = getTetrimino(holdPieceType)
         newShadow = this.getShadowCoords(newPiece, oldPiece)
       }
 
-      const shadowBoard = this.updatePiece(oldShadow, newShadow, SHADOW_COLOR)
-      const updatedBoard = this.updatePiece(oldPiece.coords, newPiece.coords, newPiece.color, shadowBoard)
+      const boardShadowUpdated = this.updatePiece(oldShadow, newShadow, SHADOW_COLOR)
+      const updatedBoard = this.updatePiece(oldPiece.coords, newPiece.coords, newPiece.color, boardShadowUpdated)
 
       this.setState({
         holdBlocked: true,
@@ -272,7 +273,6 @@ class Game extends React.Component {
   }
 
   movePiece = (direction) => {
-    const shadowCoordsObj = getTetriminoCoordsSet({coords: this.state.shadow})
     const pieceCoordsObj = getTetriminoCoordsSet(this.state.movingPiece)
     const oldPiece = this.state.movingPiece
     const {board} = this.state
@@ -283,36 +283,24 @@ class Game extends React.Component {
       case LEFT:
         newCoords = oldPiece.coords.filter(([x, y]) => (
           x > 0 && board[y][x-1] !== undefined && (
-            board[y][x-1] === 0 || (
-              board[y][x-1] !== 0 && (
-                pieceCoordsObj.has(String(x-1) + ',' + String(y)) ||
-                shadowCoordsObj.has(String(x-1) + ',' + String(y))
-              )
-            )
+            board[y][x-1] === EMPTY_COLOR || board[y][x-1] === SHADOW_COLOR || 
+            pieceCoordsObj.has(String(x-1) + ',' + String(y))
           )
         )).map(([x, y]) => ( [x-1, y] ))
         break
       case RIGHT:
         newCoords = oldPiece.coords.filter(([x, y]) => (
           x < 9 && board[y][x+1] !== undefined && (
-            board[y][x+1] === 0 || (
-              board[y][x+1] !== 0 && (
-                pieceCoordsObj.has(String(x+1) + ',' + String(y)) ||
-                shadowCoordsObj.has(String(x+1) + ',' + String(y))
-              )
-            )
+            board[y][x+1] === EMPTY_COLOR || board[y][x+1] === SHADOW_COLOR || 
+            pieceCoordsObj.has(String(x+1) + ',' + String(y))
           )
         )).map(([x, y]) => ( [x+1, y] ))
         break
       case DOWN:
         newCoords = oldPiece.coords.filter(([x, y]) => (
           y > 0 && board[y-1][x] !== undefined && (
-            board[y-1][x] === 0 || (
-              board[y-1][x] !== 0 && (
-                pieceCoordsObj.has(String(x) + ',' + String(y-1)) ||
-                shadowCoordsObj.has(String(x) + ',' + String(y-1))
-              )
-            )
+            board[y-1][x] === EMPTY_COLOR || board[y-1][x]  === SHADOW_COLOR ||
+            pieceCoordsObj.has(String(x) + ',' + String(y-1))
           )
         )).map(([x, y]) => ( [x, y-1] ))
 
@@ -332,8 +320,7 @@ class Game extends React.Component {
 
     const newPiece = { ...oldPiece, coords: newCoords }
 
-    let shadowCoords
-    shadowCoords = this.getShadowCoords(newPiece, oldPiece)
+    const shadowCoords = this.getShadowCoords(newPiece, oldPiece)
 
     const updatedShadowBoard = this.updatePiece(this.state.shadow, shadowCoords, SHADOW_COLOR)
     const updatedBoard = this.updatePiece(oldPiece.coords, newPiece.coords, newPiece.color, updatedShadowBoard)
@@ -428,11 +415,6 @@ class Game extends React.Component {
         this.rotatePiece(1)
         return
       }
-      if (ROTATE_LEFT.has(event.keyCode)) {
-        //console.log('ROTATE LEFT')
-        this.rotatePiece(-1)
-        return
-      }
     /* End Rotations */
 
     /* Movement */
@@ -482,7 +464,7 @@ class Game extends React.Component {
 
     const piece = getTetrimino()
     const shadow = this.getShadowCoords(piece)
-    const board = Array(BOARD_HEIGHT).fill(null).map(_ => Array(BOARD_WIDTH).fill(0))
+    const board = Array(BOARD_HEIGHT).fill(null).map(_ => Array(BOARD_WIDTH).fill(EMPTY_COLOR))
 
     const shadowBoard = this.paintPiece(shadow, SHADOW_COLOR, board)
     const updatedBoard = this.paintPiece(piece.coords, piece.color, shadowBoard)
@@ -530,7 +512,7 @@ class Game extends React.Component {
           // In Board components
           shadow: [],
           movingPiece: { ...piece },
-          board: Array(BOARD_HEIGHT).fill(null).map(_ => Array(BOARD_WIDTH).fill(0)),
+          board: Array(BOARD_HEIGHT).fill(null).map(_ => Array(BOARD_WIDTH).fill(EMPTY_COLOR)),
 
           // Timer Interval
           timer: DEFAULT_TIMER,  // how ofter the piece will automatically go down

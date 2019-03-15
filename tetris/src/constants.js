@@ -10,8 +10,11 @@ export const DROP = new Set([13])
 export const BOARD_HEIGHT = 23
 export const BOARD_WIDTH = 10
 
+
+export const MINIMUM_TIMER = 100
 export const DEFAULT_TIMER = 1000
 export const LB_UPDATE_RATE = 30000
+export const TIMER_REDUCTION_PER_ROW = 20
 
 export const SCORE_PER_ROW = 500
 export const MULTIPLIERS = { 1: 1, 2: 1.25, 3: 1.5, 4: 2 }
