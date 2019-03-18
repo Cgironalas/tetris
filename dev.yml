@@ -42,5 +42,5 @@ services:
       - db
       - flask
     volumes:
-      - ./tetris/src:/usr/src/tetris/src
-      - ./tetris/public:/usr/src/tetris/public
+      - ./tetris/src:/usr/tetris/src
+      - ./tetris/public:/usr/tetris/public
