@@ -1,6 +1,6 @@
 FROM node:10-alpine
 
-WORKDIR /usr/src/tetris
+WORKDIR /usr/tetris
 
 RUN npm install -g serve
 

@@ -13,10 +13,9 @@ RUN pip install -U poetry
 RUN poetry config settings.virtualenvs.create false
 RUN poetry install --no-dev
 
-COPY deploy.py .
-COPY config.py .
-COPY constants.py .
+ENV FLASK_APP /usr/api
+ENV FLASK_ENV development
 
 EXPOSE 5000
 
-CMD ["uwsgi", "--socket=0.0.0.0:5000", "--protocol=http", "--module=deploy:APP"]
+CMD ["flask", "run", "--host=0.0.0.0"]

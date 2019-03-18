@@ -14,7 +14,7 @@ api:
 
 .PHONY: api_dev
 api_dev:
-	@docker build --tag=tetris_api_dev:latest api
+	@docker build --tag=tetris_api_dev:latest --file=api/dev.Dockerfile api
 
 
 
@@ -28,7 +28,7 @@ game: deploy_game
 
 .PHONY: game_dev
 game_dev:
-	@docker build --tag=tetris_game_dev:latest --file=tetris/Dockerfile_dev tetris
+	@docker build --tag=tetris_game_dev:latest --file=tetris/dev.Dockerfile tetris
 
 
 

@@ -9,6 +9,7 @@ python = "^3.7"
 Flask = "^1.0"
 psycopg2 = "^2.7"
 flask-sqlalchemy = "^2.3"
+uwsgi = "^2.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.3"

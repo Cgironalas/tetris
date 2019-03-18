@@ -17,15 +17,15 @@ services:
       - "5432"
 
   flask:
-    build: ./api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
     image: tetris_api:latest
     restart: always
-    depends_on:
-      - nginx
-    volumes:
-      - ./api:/usr/api
     expose:
       - "5000"
+    depends_on:
+      - nginx
 
   game:
     build:
@@ -33,11 +33,9 @@ services:
       dockerfile: Dockerfile
     image: tetris_game:latest
     restart: always
+    expose:
+      - "3000"
     depends_on:
       - nginx
       - db
       - flask
-    volumes:
-      - ./tetris/build:/usr/src/tetris/build
-    expose:
-      - "3000"

@@ -15,17 +15,17 @@ services:
   flask:
     image: cgironalas/tetris_api:latest
     restart: always
-    depends_on:
-      - nginx
     expose:
       - "5000"
+    depends_on:
+      - nginx
 
   game:
     image: cgironalas/tetris_game:latest
     restart: always
+    expose:
+      - "3000"
     depends_on:
       - nginx
       - db
       - flask
-    expose:
-      - "3000"
