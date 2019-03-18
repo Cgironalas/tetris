@@ -478,6 +478,7 @@ class Game extends React.Component {
       movingPiece: { ...piece },
       nextPiece: getRandomTetriminoType(),
     })
+    document.getElementById("game").focus()
   }
 
   submitScore = (event) => {
@@ -537,7 +538,7 @@ class Game extends React.Component {
 
   render() {
     return (
-      <div className="game" onKeyDown={this.handleKeyPress}>
+      <div id="game" className="game" onKeyDown={this.handleKeyPress} tabIndex="0">
         <div className='pause'>
           {
             this.state.paused ?
@@ -548,14 +549,13 @@ class Game extends React.Component {
           <br/>
 	  <div className='game-info'>
 		<h4>CONTROLS</h4>
-		<p>To move left you can use: 'LEFT ARROW, h, or a'</p>
-		<p>To move right you can use: 'RIGHT ARROW, l, d, or e'</p>
-		<p>To move down you can use: 'DOWN ARROW, j, s, or o'</p>
-		<p>To rotate the current piece use: 'SPACEBAR, UP ARROW, k, or r'</p>
+		<p>To move left you can use: 'LEFT ARROW, H, or A'</p>
+		<p>To move right you can use: 'RIGHT ARROW, L, D, or E'</p>
+		<p>To move down you can use: 'DOWN ARROW, J, S, or O'</p>
+		<p>To rotate the current piece use: 'SPACEBAR, UP ARROW, K, or R'</p>
 		<p>To hold a piece press 'SHIFT'</p>
-		<p>To drop the current piece press 'ENTER'</p>
-		<p>You can pause the game by pressing 'p'</p>
-                <p>After pressing 'Start Game' please click somewhere on the board</p>
+		<p>To drop the current piece press 'ENTER or G'</p>
+		<p>You can pause the game by pressing 'P'</p>
 	  </div>
 
         </div>

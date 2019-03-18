@@ -5,7 +5,7 @@ export const MOVE_LEFT = new Set([72, 37, 65])
 export const MOVE_DOWN = new Set([74, 40, 79, 83])
 export const PAUSE = new Set([76, 80])
 export const HOLD = new Set([16])
-export const DROP = new Set([13])
+export const DROP = new Set([13, 71])
 
 export const BOARD_HEIGHT = 23
 export const BOARD_WIDTH = 10

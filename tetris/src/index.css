@@ -7,6 +7,10 @@ ol, ul {
   padding-left: 30px;
 }
 
+#game {
+  outline: 0;
+}
+
 .board-row:after {
   clear: both;
   content: "";
@@ -39,43 +43,43 @@ ol, ul {
 /* O-Tetrimino */
 .color1 {
   background: #ffff00;
-  border: 2px solid #000;
+  border: 1px double #000;
 }
 
 /* I-Tetrimino */
 .color2 {
   background: #0000ff;
-  border: 2px solid #000;
+  border: 1px double #000;
 }
 
 /* T-Tetrimino */
 .color3 {
   background: #800080;
-  border: 2px solid #000;
+  border: 1px double #000;
 }
 
 /* L-Tetrimino */
 .color4 {
   background: #ffa500;
-  border: 2px solid #000;
+  border: 1px double #000;
 }
 
 /* J-Tetrimino */
 .color5 {
   background: #000080;
-  border: 2px solid #000;
+  border: 1px double #000;
 }
 
 /* J-Tetrimino */
 .color6 {
   background: #00ff00;
-  border: 2px solid #000;
+  border: 1px double #000;
 }
 
 /* Z-Tetrimino */
 .color7 {
   background: #ff0000;
-  border: 2px solid #000;
+  border: 1px double #000;
 }
 
 /* Shadow */
