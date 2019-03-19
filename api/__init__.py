@@ -37,11 +37,6 @@ class Leaderboard(DB.Model): #type:ignore
     def __repr__(self) -> str:
         return '%s,%s' % (self.name, self.score)
 
-@API_BLUEPRINT.after_request
-def apply_cors(response: Response) -> Response:
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    return response
-
 @API_BLUEPRINT.route('/register', methods=('POST',))
 def register() -> Tuple[str, int]:
     name = request.form.get('name')
@@ -72,25 +67,38 @@ def register() -> Tuple[str, int]:
     }
     return jsonify(post_response), 200
 
-
 @API_BLUEPRINT.route('/leaderboard', methods=('GET',))
 def leaderboard() -> Tuple[str, int]:
     posts = Leaderboard.query.order_by(
-        Leaderboard.score.desc()).limit(10).all()
+        Leaderboard.score.desc(), Leaderboard.name.asc()).limit(10).all()
 
     # the parens make the post_response a generator
     posts_response = (
         {
-            'id': ranker.id,
             'name': ranker.name,
             'score': ranker.score,
-            'date_time': ranker.date_time
         }
         for ranker in posts
     )
     # by calling list(generator) python iterates through the generator and
     # creates a list with its components
     return jsonify(list(posts_response)), 200
+
+@API_BLUEPRINT.route('/rankings', methods=('GET',))
+def rankings() -> Tuple[str, int]:
+    ranking = Leaderboard.query.order_by(
+        Leaderboard.score.desc(), Leaderboard.name.asc()).all()
+
+    post_response = (
+        {
+            'id': ranker.id,
+            'name': ranker.name,
+            'score': ranker.score,
+            'date_time': ranker.date_time,
+        }
+        for ranker in ranking
+    )
+    return jsonify(list(post_response)), 200
 
 APP.register_blueprint(API_BLUEPRINT)
 

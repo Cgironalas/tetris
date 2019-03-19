@@ -5,14 +5,15 @@ import  axios from 'axios'
 
 import './index.css'
 import Board from './Board'
+import Leaderboard from './Leaderboard'
 
 import getTurnPoints from './scoring'
 import {
   getTetriminoCoordsSet, getRandomTetriminoType, getTetrimino
 } from './tetriminos'
 import {
-  BOARD_HEIGHT, BOARD_WIDTH,
-  ROTATE_RIGHT, MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, DROP, HOLD,
+  BOARD_HEIGHT, BOARD_WIDTH, NO_HOLD, NO_NEXT,
+  ROTATE_RIGHT, MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, DROP, HOLD, CLOSE_MODAL,
   PAUSE, DOWN, LEFT, RIGHT,
   O_TETRIMINO, SHADOW_COLOR, EMPTY_COLOR,
   MINIMUM_TIMER, DEFAULT_TIMER, LB_UPDATE_RATE, TIMER_REDUCTION_PER_ROW,
@@ -44,6 +45,7 @@ class Game extends React.Component {
 
     // General Game State
     paused: true,
+    showModal: false,
     submitted: false,
     finishedGame: false,
   }
@@ -455,6 +457,11 @@ class Game extends React.Component {
       }
     /* End Pause */
     }
+  /* Close modal */
+    if (this.state.showModal && CLOSE_MODAL.has(event.keyCode)) {
+      this.hideModalEvent(null)
+    }
+  /* End Close Modal */
   }
 /** END **/
 
@@ -534,28 +541,99 @@ class Game extends React.Component {
   captureInput = (event) => {
     this.setState({ name: event.target.value })
   }
+
+  showModalEvent = (event) => {
+    axios.get('/flask/rankings')
+      .then(res => {
+        this.setState({ showModal: res.data})
+      })
+  }
+  hideModalEvent = (event) => {
+    this.setState({ showModal: false })
+  }
 /** END **/
 
+  printLeaderboard = (leaderboard, type) => (
+    <div className='leaderboard'>
+      <div className='game-info leaderboard'><b>Leaderboard</b></div>
+
+      <table className='game-info leaderboard'>
+        <thead>
+          <tr>
+            { type === 'long' ? <th>Id</th> : null }
+            <th>User name</th>
+            <th>Score</th>
+            { type === 'long' ? <th>Date</th> : null }
+          </tr>
+        </thead>
+        <tbody>
+          {
+            leaderboard.map((ranker, index) => {
+              if (type === 'long') {
+                return (
+                  <tr key={index}>
+                    <td>{ranker.id}</td>
+                    <td>{ranker.name}</td>
+                    <td>{ranker.score}</td>
+                    <td>{ranker.date_time}</td>
+                  </tr>
+                )
+              }
+              else {
+                return (
+                  <tr key={index}>
+                    <td>{ranker.name}</td>
+                    <td>{ranker.score}</td>
+                  </tr>
+                )
+              }
+            })
+
+          }
+        </tbody>
+      </table>
+    </div>
+  )
+
+
   render() {
+    const modal = this.state.showModal ? (
+      <Leaderboard>
+        <div className="modal">
+          <div>
+            { this.printLeaderboard(this.state.showModal, 'long') }
+            <br/>
+            <button onClick={this.hideModalEvent}>Close Modal</button>
+          </div>
+        </div>
+      </Leaderboard>
+    ) : null;
+
     return (
       <div id="game" className="game" onKeyDown={this.handleKeyPress} tabIndex="0">
-        <div className='pause'>
+        {modal}
+        <div className='instructions'>
+          <h1 className='Title'>
           {
             this.state.paused ?
               this.state.nextPiece === ' ' ?
-		<h1>NEW GAME</h1>
-	        : <h1>GAME PAUSED</h1> : null
+                'NEW GAME'
+              :
+                'GAME PAUSED'
+            :
+              "\u00a0"
           }
+          </h1>
           <br/>
 	  <div className='game-info'>
-		<h4>CONTROLS</h4>
-		<p>To move left you can use: 'LEFT ARROW, H, or A'</p>
-		<p>To move right you can use: 'RIGHT ARROW, L, D, or E'</p>
-		<p>To move down you can use: 'DOWN ARROW, J, S, or O'</p>
-		<p>To rotate the current piece use: 'SPACEBAR, UP ARROW, K, or R'</p>
-		<p>To hold a piece press 'SHIFT'</p>
-		<p>To drop the current piece press 'ENTER or G'</p>
-		<p>You can pause the game by pressing 'P'</p>
+            <h4>CONTROLS</h4>
+            <p>To move left you can use:<br/>'LEFT ARROW, H, or A'</p>
+            <p>To move right you can use:<br/>'RIGHT ARROW, L, D, or E'</p>
+            <p>To move down you can use:<br/>'DOWN ARROW, J, S, or O'</p>
+            <p>To rotate the current piece use:<br/>'SPACEBAR, UP ARROW, K, or R'</p>
+            <p>To hold a piece press<br/>'SHIFT'</p>
+            <p>To drop the current piece press<br/>'ENTER or G'</p>
+            <p>You can pause the game by pressing<br/>'P'</p>
 	  </div>
 
         </div>
@@ -563,47 +641,72 @@ class Game extends React.Component {
         <div className="game-board">
           <Board rows={this.state.board.slice(0, 20)} />
         </div>
-        <div className="game-info">
-          <div className='game-info'><b>Score</b></div>
-          <div className='game-detail'>{this.state.score}</div>
 
-          <div className='game-info'><b>Next Piece</b></div>
-          <div className='game-detail'>{this.state.nextPiece}</div>
 
-          <div className='game-info'><b>Hold Piece</b></div>
-          <div className='game-detail'>{
-            this.state.holdPiece === ' ' ?
-              'Not holding a piece' : this.state.holdPiece
-          }</div>
+        <div className="side-bar">
+          <div className='game-info'>
+            <b>Score</b>
+          </div>
+          <div className='game-detail'>
+            {this.state.score}
+          </div>
 
-          <div className='game-info'><b>Leaderboard</b></div>
-          <table className='game-detail'>
-            <thead>
-              <tr>
-                <th>User name</th>
-                <th>Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {
-                this.state.leaderboard.map((ranker, index) => {
-                  return <tr key={index}><td>{ranker.name}</td><td>{ranker.score}</td></tr>
-                })
-              }
-            </tbody>
-          </table>
+          <div className='game-info'>
+            <b>Next Piece</b>
+          </div>
+          <div className='game-detail'>
+            {
+              this.state.nextPiece === ' ' ?
+                NO_NEXT
+              :
+                this.state.nextPiece
+            }
+          </div>
+
+          <div className='game-info'>
+            <b>Hold Piece</b>
+          </div>
+          <div className='game-detail'>
+            {
+              this.state.holdPiece === ' ' ?
+                NO_HOLD
+              :
+                this.state.holdPiece
+            }
+          </div>
+
           {
-            this.state.nextPiece === ' ' ? <button className='game-info' type='button' onClick={this.gameStart}>Start Game</button> : null
+            this.printLeaderboard(this.state.leaderboard, 'short')
+          }
+          {
+            this.state.paused ?
+              <div>
+                <button className='game-info' type='button' onClick={this.showModalEvent}>
+                  Show Complete
+                </button>
+                <br/>
+              </div>
+            :
+              null
+          }
+          {
+            this.state.nextPiece === ' ' ?
+              <button className='game-info' type='button' onClick={this.gameStart}>
+                Start Game
+              </button>
+            :
+              null
           }
           {
             this.state.finishedGame ?
-              <div className='game-info'>
+              <div>
                 <input
-                  className='game-detail'
+                  className='game-info'
                   type='text'
                   placeholder='Type your name here'
                   onChange={this.captureInput} />
-                <button className='game-detail' type='button' disabled={this.state.submitted} onClick={this.submitScore}>
+                <br/>
+                <button className='game-info' type='button' disabled={this.state.submitted} onClick={this.submitScore}>
                   Submit Score
                 </button>
               </div>

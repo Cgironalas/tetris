@@ -101,18 +101,34 @@ ol, ul {
   flex-direction: row;
 }
 
+.instructions {
+  margin-left: 10px;
+  margin-right: 10px;
+  max-width:300px;
+}
+
+.side-bar {
+  margin-left: 10px;
+  margin-right: 10px;
+  max-width: 200px;
+}
+
 .game-info {
   margin-left: 10px;
+  margin-right: 10px;
   margin-top: 10px;
+  width: 100%;
 }
 
 .game-detail {
   margin-left: 10px;
+  margin-right: 10px;
+  width: 100%;
 }
 
-.pause {
+.Title{
   color: #cc0000;
-  margin: 0px 20px;
+  margin: 0px 0px;
 }
 
 table {
