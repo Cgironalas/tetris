@@ -1,3 +1,5 @@
+export const API_URL = ''
+
 export const MODAL_ROOT = document.getElementById('modalRoot')
 
 export const ROTATE_RIGHT = new Set([75, 38, 188, 87, 82, 32])

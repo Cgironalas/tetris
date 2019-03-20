@@ -12,9 +12,9 @@ import {
   getTetriminoCoordsSet, getRandomTetriminoType, getTetrimino
 } from './tetriminos'
 import {
-  BOARD_HEIGHT, BOARD_WIDTH, NO_HOLD, NO_NEXT,
-  ROTATE_RIGHT, ROTATE_LEFT, MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, DROP, HOLD, CLOSE_MODAL,
-  PAUSE, DOWN, LEFT, RIGHT,
+  API_URL, BOARD_HEIGHT, BOARD_WIDTH, NO_HOLD, NO_NEXT,
+  ROTATE_RIGHT, ROTATE_LEFT, MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, DROP, HOLD,
+  CLOSE_MODAL, PAUSE, DOWN, LEFT, RIGHT,
   O_TETRIMINO, SHADOW_COLOR, EMPTY_COLOR,
   MINIMUM_TIMER, DEFAULT_TIMER, LB_UPDATE_RATE, TIMER_REDUCTION_PER_ROW,
 } from './constants'
@@ -65,7 +65,7 @@ class Game extends React.Component {
 
   // Fetch the leaderboard from the API
   updateLeaderboard = () => {
-    axios.get('/flask/leaderboard')
+    axios.get(API_URL + '/flask/leaderboard')
       .then(res => {
         this.setState({ leaderboard: res.data })
       })
@@ -505,7 +505,7 @@ class Game extends React.Component {
     const data = new FormData()
     data.set('name', this.state.name)
     data.set('score', this.state.score)
-    const link = '/flask/register'
+    const link = API_URL + '/flask/register'
 
     axios({
       url: link,
@@ -554,7 +554,7 @@ class Game extends React.Component {
   }
 
   showModalEvent = (event) => {
-    axios.get('/flask/rankings')
+    axios.get(API_URL + '/flask/rankings')
       .then(res => {
         this.setState({ showModal: res.data})
       })
