@@ -18,12 +18,8 @@ api_dev:
 
 
 
-.PHONY: deploy_game
-deploy_game:
-	@npm install --prefix ./tetris && npm run build --prefix ./tetris
-
 .PHONY: game
-game: #deploy_game
+game:
 	@docker build --tag=tetris_game:latest tetris
 
 .PHONY: game_dev
