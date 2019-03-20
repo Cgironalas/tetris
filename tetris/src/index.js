@@ -13,7 +13,7 @@ import {
 } from './tetriminos'
 import {
   BOARD_HEIGHT, BOARD_WIDTH, NO_HOLD, NO_NEXT,
-  ROTATE_RIGHT, MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, DROP, HOLD, CLOSE_MODAL,
+  ROTATE_RIGHT, ROTATE_LEFT, MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, DROP, HOLD, CLOSE_MODAL,
   PAUSE, DOWN, LEFT, RIGHT,
   O_TETRIMINO, SHADOW_COLOR, EMPTY_COLOR,
   MINIMUM_TIMER, DEFAULT_TIMER, LB_UPDATE_RATE, TIMER_REDUCTION_PER_ROW,
@@ -335,10 +335,8 @@ class Game extends React.Component {
 /* End piece movement */
 
 /* Pice rotation */
-  checkKicks = (coords, piece, rotation) => {
-    const from = piece.rotation % 4
-    const to = (from + rotation) % 4
-    const testsKey = String(from) + ',' + String(to)
+  checkKicks = (coords, piece, nextRotation) => {
+    const testsKey = String(piece.rotation) + ',' + String(nextRotation)
     const currentTests = piece.wallKickTests[testsKey]
 
     const board = [ ...this.state.board ]
@@ -365,34 +363,37 @@ class Game extends React.Component {
     return null
   }
 
-  getNextRotation = (piece, rotation) => {
-    const currentRotationIndex = piece.rotation
-    const rotationMath = piece.rotations[(currentRotationIndex + rotation) % 4]
+  getNextRotation = (piece, rotation, nextRotation) => {
+    const rotationMath = piece.rotations[nextRotation]
 
     const rotatedCoords = piece.coords.map(([x, y], index) => {
-      const xSum = rotationMath[index][0]
-      const ySum = rotationMath[index][1]
+      const xSum = rotationMath[index][0] * rotation
+      const ySum = rotationMath[index][1] * rotation
       return [x + xSum, y + ySum]
     })
 
-    return this.checkKicks(rotatedCoords, piece, rotation)
+    return this.checkKicks(rotatedCoords, piece, nextRotation)
   }
 
   rotatePiece = (rotation) => {
     const oldPiece = this.state.movingPiece
     const oldShadowCoords = this.state.shadow
 
+    const prevRotation = oldPiece.rotation
+    const sum = prevRotation + rotation
+    const nextRotation = sum === 4 ? 0 : sum === -1 ? 3 : sum
+
     if (oldPiece.type === O_TETRIMINO) {
       return
     }
     else {
-      const newCoords = this.getNextRotation(oldPiece, rotation)
+      const newCoords = this.getNextRotation(oldPiece, rotation, nextRotation)
       if (newCoords === null) {
         return
       }
       const newPiece = {
         ...oldPiece,
-        rotation: oldPiece.rotation + rotation,
+        rotation: nextRotation,
         coords: newCoords
       }
 
@@ -411,57 +412,67 @@ class Game extends React.Component {
 
 /** Key press handling **/
   handleKeyPress = (event) => {
-    if (!this.state.finishedGame) {
-    /* Rotations */
-      if (ROTATE_RIGHT.has(event.keyCode)) {
-        this.rotatePiece(1)
-        return
-      }
-    /* End Rotations */
+    /* If Modal Closed*/
+      if (!this.state.finishedGame) {
+      /* Rotations */
+        if (ROTATE_RIGHT.has(event.keyCode)) {
+          this.removePause()
+          this.rotatePiece(1)
+          return
+        }
 
-    /* Movement */
-      if (MOVE_LEFT.has(event.keyCode)) {
-        this.removePause()
-        this.movePiece(LEFT)
-        return
-      }
-      if (MOVE_RIGHT.has(event.keyCode)) {
-        this.removePause()
-        this.movePiece(RIGHT)
-        return
-      }
-      if (MOVE_DOWN.has(event.keyCode)) {
-        this.removePause()
-        this.movePiece(DOWN)
-        return
-      }
-      if (DROP.has(event.keyCode)) {
-        this.removePause()
-        this.dropPiece()
-        return
-      }
-    /* End Movement */
+        // if (ROTATE_LEFT.has(event.keyCode)) {
+        //   this.removePause()
+        //   this.rotatePiece(-1)
+        //   return
+        // }
+      /* End Rotations */
 
-    /* Hold piece */
-      if (HOLD.has(event.keyCode)) {
-        this.removePause()
-        this.holdPiece()
-        return
-      }
-    /* End Hold */
+      /* Movement */
+        if (MOVE_LEFT.has(event.keyCode)) {
+          this.removePause()
+          this.movePiece(LEFT)
+          return
+        }
+        if (MOVE_RIGHT.has(event.keyCode)) {
+          this.removePause()
+          this.movePiece(RIGHT)
+          return
+        }
+        if (MOVE_DOWN.has(event.keyCode)) {
+          this.removePause()
+          this.movePiece(DOWN)
+          return
+        }
+        if (DROP.has(event.keyCode)) {
+          this.removePause()
+          this.dropPiece()
+          return
+        }
+      /* End Movement */
 
-    /* Pause */
-      if (PAUSE.has(event.keyCode)) {
-        this.setState(state => ({ paused: !state.paused }))
-        return
+      /* Hold piece */
+        if (HOLD.has(event.keyCode)) {
+          this.removePause()
+          this.holdPiece()
+          return
+        }
+      /* End Hold */
+
+      /* Pause */
+        if (PAUSE.has(event.keyCode)) {
+          this.setState(state => ({ paused: !state.paused }))
+          return
+        }
+      /* End Pause */
       }
-    /* End Pause */
-    }
-  /* Close modal */
-    if (this.state.showModal && CLOSE_MODAL.has(event.keyCode)) {
-      this.hideModalEvent(null)
-    }
-  /* End Close Modal */
+    /* End if modal closed */
+
+    /* Close modal */
+      if (this.state.showModal && CLOSE_MODAL.has(event.keyCode)) {
+        this.hideModalEvent(null)
+      }
+    /* End Close Modal */
   }
 /** END **/
 
