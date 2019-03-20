@@ -115,7 +115,7 @@ port used by the API go to `/tetris/constants.js` and change the `API_URL`
 variable. In this case you also need to change the `/api/__init__.py` to add a
 workaround to the CORS issue. For that add the following lines before the
 first 'route' declaration in the code.
-`@API_BLUEPRINT.after_request`
-`def apply_cors(response: Response) -> Response:`
-`    response.headers['Access-Control-Allow-Origin'] = '*'`
+`@API_BLUEPRINT.after_request` 
+`def apply_cors(response: Response) -> Response:` 
+`    response.headers['Access-Control-Allow-Origin'] = '*'` 
 `    return response`
