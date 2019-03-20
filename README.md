@@ -110,12 +110,14 @@ The API is the only component that connects to the Database. To change the IP
 and port used by the database go to `/api/config.py` and change the `POSTGRES_URL`
 variable.
 
-The Game is the only component that connects to the API to change the IP and 
+The Game is the only component that connects to the API to change the IP and
 port used by the API go to `/tetris/constants.js` and change the `API_URL`
 variable. In this case you also need to change the `/api/__init__.py` to add a
 workaround to the CORS issue. For that add the following lines before the
 first 'route' declaration in the code.
-`@API_BLUEPRINT.after_request` 
-`def apply_cors(response: Response) -> Response:` 
-`    response.headers['Access-Control-Allow-Origin'] = '*'` 
-`    return response`
+```python
+@API_BLUEPRINT.after_request
+def apply_cors(response: Response) -> Response:
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
+```
