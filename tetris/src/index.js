@@ -335,9 +335,8 @@ class Game extends React.Component {
 /* End piece movement */
 
 /* Pice rotation */
-  checkKicks = (coords, piece, nextRotation) => {
-    const testsKey = String(piece.rotation) + ',' + String(nextRotation)
-    const currentTests = piece.wallKickTests[testsKey]
+  checkKicks = (coords, piece, rotation) => {
+    const currentTests = piece.wallKickTests[rotation]
 
     const board = [ ...this.state.board ]
     const pieceCoordsObj = getTetriminoCoordsSet(piece)
@@ -363,16 +362,16 @@ class Game extends React.Component {
     return null
   }
 
-  getNextRotation = (piece, rotation, nextRotation) => {
-    const rotationMath = piece.rotations[nextRotation]
+  getBaseRotation = (piece, rotation) => {
+    const rotationMath = piece.rotations[rotation]
 
     const rotatedCoords = piece.coords.map(([x, y], index) => {
-      const xSum = rotationMath[index][0] * rotation
-      const ySum = rotationMath[index][1] * rotation
+      const xSum = rotationMath[index][0]
+      const ySum = rotationMath[index][1]
       return [x + xSum, y + ySum]
     })
 
-    return this.checkKicks(rotatedCoords, piece, nextRotation)
+    return rotatedCoords
   }
 
   rotatePiece = (rotation) => {
@@ -380,14 +379,17 @@ class Game extends React.Component {
     const oldShadowCoords = this.state.shadow
 
     const prevRotation = oldPiece.rotation
+
     const sum = prevRotation + rotation
     const nextRotation = sum === 4 ? 0 : sum === -1 ? 3 : sum
+    const rotationKey = String(oldPiece.rotation) + ',' + String(nextRotation)
 
     if (oldPiece.type === O_TETRIMINO) {
       return
     }
     else {
-      const newCoords = this.getNextRotation(oldPiece, rotation, nextRotation)
+      const rotatedCoords = this.getBaseRotation(oldPiece, rotationKey)
+      const newCoords = this.checkKicks(rotatedCoords, oldPiece, rotationKey)
       if (newCoords === null) {
         return
       }
@@ -421,11 +423,11 @@ class Game extends React.Component {
           return
         }
 
-        // if (ROTATE_LEFT.has(event.keyCode)) {
-        //   this.removePause()
-        //   this.rotatePiece(-1)
-        //   return
-        // }
+        if (ROTATE_LEFT.has(event.keyCode)) {
+          this.removePause()
+          this.rotatePiece(-1)
+          return
+        }
       /* End Rotations */
 
       /* Movement */
@@ -638,13 +640,13 @@ class Game extends React.Component {
           <br/>
 	  <div className='game-info'>
             <h4>CONTROLS</h4>
-            <p>To move left you can use:<br/>'LEFT ARROW, H, or A'</p>
-            <p>To move right you can use:<br/>'RIGHT ARROW, L, D, or E'</p>
-            <p>To move down you can use:<br/>'DOWN ARROW, J, S, or O'</p>
-            <p>To rotate the current piece use:<br/>'SPACEBAR, UP ARROW, K, or R'</p>
-            <p>To hold a piece press<br/>'SHIFT'</p>
-            <p>To drop the current piece press<br/>'ENTER or G'</p>
-            <p>You can pause the game by pressing<br/>'P'</p>
+            <p>To move left you can use:<br/>LEFT ARROW, H, or A</p>
+            <p>To move right you can use:<br/>RIGHT ARROW, L, D, or E</p>
+            <p>To move down you can use:<br/>DOWN ARROW, J, S, or O</p>
+            <p>To rotate the current piece use:<br/>SPACEBAR, UP ARROW, K, or R</p>
+            <p>To hold a piece press<br/>SHIFT</p>
+            <p>To drop the current piece press<br/>ENTER or G</p>
+            <p>You can pause the game by pressing<br/>P</p>
 	  </div>
 
         </div>
