@@ -34,58 +34,70 @@ ol, ul {
   width: 30px;
 }
 
+/* empty block after color */
+.color1 + .color0,
+.color2 + .color0,
+.color3 + .color0,
+.color4 + .color0,
+.color5 + .color0,
+.color6 + .color0,
+.color7 + .color0,
+.color9 + .color0 {
+  border-left: 2px solid #000;
+}
+
 /* empty block */
 .color0 {
   background: #ffffff;
-  border: 1px solid #999;
+  border: 2px solid #999;
 }
 
 /* O-Tetrimino */
 .color1 {
   background: #ffff00;
-  border: 1px double #000;
+  border: 2px solid #000;
 }
 
 /* I-Tetrimino */
 .color2 {
   background: #0000ff;
-  border: 1px double #000;
+  border: 2px solid #000;
 }
 
 /* T-Tetrimino */
 .color3 {
   background: #800080;
-  border: 1px double #000;
+  border: 2px solid #000;
 }
 
 /* L-Tetrimino */
 .color4 {
   background: #ffa500;
-  border: 1px double #000;
+  border: 2px solid #000;
 }
 
 /* J-Tetrimino */
 .color5 {
   background: #000080;
-  border: 1px double #000;
+  border: 2px solid #000;
 }
 
 /* J-Tetrimino */
 .color6 {
   background: #00ff00;
-  border: 1px double #000;
+  border: 2px solid #000;
 }
 
 /* Z-Tetrimino */
 .color7 {
   background: #ff0000;
-  border: 1px double #000;
+  border: 2px solid #000;
 }
 
 /* Shadow */
 .color9 {
   background: #aaaaaa;
-  border: 1px solid #000;
+  border: 2px solid #000;
 }
 
 .square:focus {

@@ -558,11 +558,13 @@ class Game extends React.Component {
           submitted: false,
           finishedGame: false,
         })
+
+        clearInterval(this.downInterval)
         this.downInterval = setInterval(() => {
           if (!this.state.finishedGame && !this.state.paused) {
             this.movePiece(DOWN);
           }
-        }, this.state.timer)
+        }, DEFAULT_TIMER)
       })
   }
 
