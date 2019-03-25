@@ -88,7 +88,7 @@ class Game extends React.Component {
     clearInterval(this.downInterval)
     clearInterval(this.updateLeaderboardInterval)
   }
-/** END **/
+/** END Automatic component updates **/
 
 /** Piece generation **/
   getNewPiece = () => {
@@ -111,10 +111,10 @@ class Game extends React.Component {
       })
     }
   }
-/** END **/
+/** END Piece generation **/
 
 /* Board repainting */
-  // erasePiece, paintPiece, checkFinishedRows
+  // erasePiece, paintPiece, updatePiece, checkFinishedRows, holdPiece, getShadowCoords
 
   erasePiece = (coords, board = this.state.board) => {
     let newBoard = board.slice()
@@ -200,8 +200,10 @@ class Game extends React.Component {
         newShadow = this.getShadowCoords(newPiece, oldPiece)
       }
 
-      const boardShadowUpdated = this.updatePiece(oldShadow, newShadow, SHADOW_COLOR)
-      const updatedBoard = this.updatePiece(oldPiece.coords, newPiece.coords, newPiece.color, boardShadowUpdated)
+      const noShadow = this.erasePiece(oldShadow)
+      const noPiece = this.erasePiece(oldPiece.coords, noShadow)
+      const withShadow = this.paintPiece(newShadow, SHADOW_COLOR, noPiece)
+      const updatedBoard = this.paintPiece(newPiece.coords, newPiece.color, withShadow)
 
       this.setState({
         holdBlocked: true,
@@ -253,7 +255,7 @@ class Game extends React.Component {
     const newCoords = piece.coords.map(([x, y]) => ( [x, y-counter] ))
     return newCoords
   }
-/* End board repainting */
+/* END board repainting */
 
 /* Piece movement */
   // dropPiece, movePiece, removePause
@@ -324,17 +326,26 @@ class Game extends React.Component {
 
     const shadowCoords = this.getShadowCoords(newPiece, oldPiece)
 
-    const updatedShadowBoard = this.updatePiece(this.state.shadow, shadowCoords, SHADOW_COLOR)
-    const updatedBoard = this.updatePiece(oldPiece.coords, newPiece.coords, newPiece.color, updatedShadowBoard)
-    this.setState({ movingPiece: { ...newPiece}, board: updatedBoard.slice(), shadow: shadowCoords })
+    const noShadow = this.erasePiece(this.state.shadow)
+    const noPiece = this.erasePiece(oldPiece.coords, noShadow)
+    const withShadow = this.paintPiece(shadowCoords, SHADOW_COLOR, noPiece)
+    const updatedBoard = this.paintPiece(newPiece.coords, newPiece.color, withShadow)
+
+    this.setState({
+      movingPiece: { ...newPiece},
+      board: updatedBoard.slice(),
+      shadow: shadowCoords,
+    })
   }
 
   removePause = () => {
     this.setState({ paused: false })
   }
-/* End piece movement */
+/* END piece movement */
 
 /* Pice rotation */
+  // checkKicks, getBaseRotation, rotatePiece
+
   checkKicks = (coords, piece, rotation) => {
     const currentTests = piece.wallKickTests[rotation]
 
@@ -401,16 +412,19 @@ class Game extends React.Component {
 
       const newShadowCoords = this.getShadowCoords(newPiece, oldPiece)
 
-      const erasedShadowBoard = this.updatePiece(oldShadowCoords, newShadowCoords, SHADOW_COLOR)
-      const updatedBoard = this.updatePiece(oldPiece.coords, newPiece.coords, newPiece.color, erasedShadowBoard)
+      const noShadow = this.erasePiece(oldShadowCoords)
+      const noPiece = this.erasePiece(oldPiece.coords, noShadow)
+      const withShadow = this.paintPiece(newShadowCoords, SHADOW_COLOR, noPiece)
+      const updatedBoard = this.paintPiece(newPiece.coords, newPiece.color, withShadow)
+
       this.setState({
         shadow: newShadowCoords,
-        board: [ ...updatedBoard],
+        board: [ ...updatedBoard ],
         movingPiece: { ...newPiece },
       })
     }
   }
-/** End piece rotation **/
+/** END piece rotation **/
 
 /** Key press handling **/
   handleKeyPress = (event) => {
@@ -476,9 +490,11 @@ class Game extends React.Component {
       }
     /* End Close Modal */
   }
-/** END **/
+/** END key press handling **/
 
 /** Button handlers **/
+  //gameStart, submitScore, captureInput, showModalEvent, hideModalEvent
+
   gameStart = (event) => {
     this.updateLeaderboard()
 
@@ -488,7 +504,6 @@ class Game extends React.Component {
 
     const shadowBoard = this.paintPiece(shadow, SHADOW_COLOR, board)
     const updatedBoard = this.paintPiece(piece.coords, piece.color, shadowBoard)
-
 
     this.setState({
       paused: false,
@@ -564,7 +579,7 @@ class Game extends React.Component {
   hideModalEvent = (event) => {
     this.setState({ showModal: false })
   }
-/** END **/
+/** END Button handlers **/
 
   printLeaderboard = (leaderboard, type) => (
     <div className='leaderboard'>
@@ -654,7 +669,6 @@ class Game extends React.Component {
         <div className="game-board">
           <Board rows={this.state.board.slice(0, 20)} />
         </div>
-
 
         <div className="side-bar">
           <div className='game-info'>
