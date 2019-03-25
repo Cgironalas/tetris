@@ -430,6 +430,19 @@ class Game extends React.Component {
   handleKeyPress = (event) => {
     /* If Modal Closed*/
       if (!this.state.finishedGame) {
+        if (event.keyCode === 77) {
+          let x = 0
+          this.move = setInterval(() => {
+            console.log('test')
+            this.movePiece(LEFT)
+            x++
+            if (x === 4) {
+              clearInterval(this.move)
+            }
+          }, 10)
+        }
+
+
       /* Rotations */
         if (ROTATE_RIGHT.has(event.keyCode)) {
           this.removePause()
