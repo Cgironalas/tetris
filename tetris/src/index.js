@@ -13,7 +13,8 @@ import {
 } from './tetriminos'
 import {
   API_URL, BOARD_HEIGHT, BOARD_WIDTH, NO_HOLD, NO_NEXT,
-  ROTATE_RIGHT, ROTATE_LEFT, MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, DROP, HOLD,
+  ROTATE_RIGHT, ROTATE_LEFT, MOVE_DOWN, DROP, HOLD,
+  MOVE_LEFT, COMP_LEFT, MOVE_RIGHT, COMP_RIGHT,
   CLOSE_MODAL, PAUSE, DOWN, LEFT, RIGHT,
   O_TETRIMINO, SHADOW_COLOR, EMPTY_COLOR,
   MINIMUM_TIMER, DEFAULT_TIMER, LB_UPDATE_RATE, TIMER_REDUCTION_PER_ROW,
@@ -341,6 +342,17 @@ class Game extends React.Component {
   removePause = () => {
     this.setState({ paused: false })
   }
+
+  compMove = (moves, direction) => {
+    let x = 0
+    this.move = setInterval(() => {
+      this.movePiece(direction)
+      x++
+      if (x === moves) {
+        clearInterval(this.move)
+      }
+    }, 10)
+  }
 /* END piece movement */
 
 /* Pice rotation */
@@ -430,17 +442,19 @@ class Game extends React.Component {
   handleKeyPress = (event) => {
     /* If Modal Closed*/
       if (!this.state.finishedGame) {
-        if (event.keyCode === 77) {
-          let x = 0
-          this.move = setInterval(() => {
-            console.log('test')
-            this.movePiece(LEFT)
-            x++
-            if (x === 4) {
-              clearInterval(this.move)
-            }
-          }, 10)
+      /* Competitive movement */
+        if (COMP_LEFT.has(event.keyCode)) {
+          this.removePause()
+          const limit = 53 - event.keyCode + 1
+          this.compMove(limit, LEFT)
         }
+
+        if (COMP_RIGHT.has(event.keyCode)) {
+          this.removePause()
+          const limit = event.keyCode === 48 ? 5 : event.keyCode - 53
+          this.compMove(limit, RIGHT)
+        }
+      /* END competitive movement */
 
 
       /* Rotations */
@@ -677,6 +691,9 @@ class Game extends React.Component {
             <p>To hold a piece press<br/>SHIFT</p>
             <p>To drop the current piece press<br/>ENTER or G</p>
             <p>You can pause the game by pressing<br/>P</p>
+            <h4>Extra movement</h4>
+            <p>Press from 1 to 5 to move left<br/>from 5 to 1 times respectively.</p>
+            <p>Press from 6 to 0 to move right<br/>from 1 to 5 times respectively.</p>
 	  </div>
 
         </div>
