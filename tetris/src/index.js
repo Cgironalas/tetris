@@ -96,7 +96,7 @@ class Game extends React.Component {
     const newPiece = getTetrimino(this.state.nextPiece)
 
     const finishCheck = this.state.board[19].filter(x => (
-      this.state.board[19][x] !== EMPTY_COLOR
+      x !== EMPTY_COLOR
     ))
     if (finishCheck.length) {
       alert('End match')
